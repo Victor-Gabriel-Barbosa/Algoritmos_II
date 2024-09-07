@@ -3,25 +3,13 @@
 #include <stdio.h>
 
 int main(void) {
-  int dias = 0, dias_aux = 0, meses = 0, anos = 0;
+  int dias, meses, anos;
   printf("Digite a idade da pessoa em dias: ");
   scanf("%d", &dias);  
-  dias_aux = dias;
-  dias = 0;
-  while (dias_aux > 0) {
-    if (dias_aux >= 360) {
-      dias_aux = dias_aux - 360;
-      anos++;
-    }
-      else if (dias_aux >= 30) {
-        dias_aux = dias_aux - 30;
-        meses++;
-      }
-        else if (dias < 30) {
-          dias_aux--;
-          dias++;
-        }
-  }
-  printf("☀️A idade da pessoa é %d anos, %d meses e %d dias", anos, meses, dias);
+  anos = dias / 365;
+  dias = dias % 365;
+  meses = dias / 30;
+  dias = dias % 30;
+  printf( "A idade da pessoa é %d anos, %d meses e %d dias", anos, meses, dias);
   return 0;
 }
