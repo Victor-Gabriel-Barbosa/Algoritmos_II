@@ -22,6 +22,6 @@ int main(void) {
           dias++;
         }
   }
-  printf( "A idade da pessoa é %d anos, %d meses e %d dias", anos, meses, dias);
+  printf("☀️A idade da pessoa é %d anos, %d meses e %d dias", anos, meses, dias);
   return 0;
 }

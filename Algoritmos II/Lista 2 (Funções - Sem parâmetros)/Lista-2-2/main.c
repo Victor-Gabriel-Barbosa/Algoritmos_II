@@ -5,17 +5,21 @@
  * principal o custo ao consumidor */
 
 #include <stdio.h>
-#include <stdio_ext.h>
 
 float custCons(float custFab) { // função que calcula o custo ao consumidor
   return (custFab + custFab * 0.28 + custFab * 0.45);
 }
 
+void limpa_buffer() {
+  char c;
+  while ((c = getchar())!= '\n' && c!= EOF);
+}
+
 int main(void) {
   float custFab;
-  printf("Digite o custo de fábrica do carro: ");
+  printf("😎💻Digite o custo de fábrica do carro: ");
   scanf("%f", &custFab);
-  __fpurge(stdin);
+  limpa_buffer();
   printf("O custo ao consumidor é: R$%.2f", custCons(custFab));
   return 0;
 }

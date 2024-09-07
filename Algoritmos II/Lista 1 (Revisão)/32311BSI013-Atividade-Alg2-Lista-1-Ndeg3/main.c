@@ -8,6 +8,6 @@ int main() {
   printf("Digite o custo de fábrica do carro: ");
   scanf("%d", &preco);
   custo_final = preco + (preco * impostos) + (preco * distribuidor);
-  printf("O custo final do carro é: R$%.2f", custo_final);
+  printf("😎O custo final do carro é: R$%.2f", custo_final);
   return 0;
 }

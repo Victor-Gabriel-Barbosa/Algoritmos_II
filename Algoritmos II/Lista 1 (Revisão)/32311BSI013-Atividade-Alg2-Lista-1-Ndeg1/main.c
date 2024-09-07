@@ -10,7 +10,7 @@ void limpa_buffer() {
 
 int main() {
   int anos, meses, dias, idade;
-  printf("Digite a idade da pessoa em anos: ");
+  printf("☀️Digite a idade da pessoa em anos: ");
   scanf("%d", &anos);
   limpa_buffer();
   printf("Digite a idade da pessoa em meses: ");
