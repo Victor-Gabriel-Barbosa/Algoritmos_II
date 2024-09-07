@@ -5,7 +5,7 @@ pesos a seguir:
 - Nota Peso;
 - Trabalho de laboratório 2;
 - Avaliação semestral 3;
-- Exame final 5.
+- Exame final 5.65v
 Faça uma função que receba três notas, calcule e retorne ao programa principal a
 média ponderada e imprima a partir da média o conceito que segue a tabela:
 - 8.01 a 10: A
