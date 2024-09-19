@@ -65,6 +65,10 @@ int main(void) {
     }
   } while (qtd < 1);
   client *cl = (client *) calloc(qtd, sizeof(client));
+  if (cl == NULL) {
+    printf("\n\033[0;31m[ERRO]\033[0m Memória insuficiente!\n");
+    exit(1);
+  }
   ler(cl, qtd);
   imprimir(cl, qtd);
   free(cl);

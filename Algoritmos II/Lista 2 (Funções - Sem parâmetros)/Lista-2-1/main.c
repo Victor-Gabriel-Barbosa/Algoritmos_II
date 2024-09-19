@@ -16,7 +16,7 @@ int idadeEmDias(int anos, int meses, int dias) { // Converte a idade em dias
 
 int main(void) {
   int anos, meses, dias;
-  printf("Digite a idade em anos: ");
+  printf("😎Digite a idade em anos: ");
   scanf("%d", &anos);
   limpa_buffer();
   printf("Digite a idade em meses: ");
