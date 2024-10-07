@@ -8,10 +8,9 @@
 #include <stdlib.h>
 
 void escrever_arquivo(char *nome_arquivo) { // [FUNÇÃO DE ESCREVER NO ARQUIVO]
-  FILE *arquivo;
+  FILE *arquivo = fopen(nome_arquivo, "w");
   char c;
-  arquivo = fopen(nome_arquivo, "w");
-  if (!arquivo) {
+  if (arquivo == NULL) {
     printf("\nErro ao abrir o arquivo!\n");
     exit(1);
   }
@@ -25,24 +24,21 @@ void escrever_arquivo(char *nome_arquivo) { // [FUNÇÃO DE ESCREVER NO ARQUIVO]
 
 void ler_arquivo(char *nome_arquivo) { // [FUNÇÃO DE LER O ARQUIVO]
   FILE *arquivo = fopen(nome_arquivo, "r");
-  if (!arquivo) {
+  if (arquivo == NULL) {
     printf("\nErro ao abrir o arquivo!\n");
     exit(1);
   }
   char c;
   printf("\nCaracteres gravados no arquivo:\n");
-  do {
-    c = fgetc(arquivo);
-    if (c != EOF) {
-      printf("%c", c);
-    }
-  } while (c != EOF);
+  while ((c = fgetc(arquivo)) != EOF) {
+    printf("%c", c);
+  }
   fclose(arquivo);
 }
 
 int main(void) {
   escrever_arquivo("arq.txt");
   ler_arquivo("arq.txt");
-  printf("🫢 Tudo certo!");
+  printf("\nTudo certo!");
   return 0;
 }

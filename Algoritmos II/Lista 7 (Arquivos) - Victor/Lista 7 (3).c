@@ -1,8 +1,7 @@
-/*3 - Faça um programa que receba do usuário um arquivo texto e mostre na tela quantas letras são vogais.*/
+/* 3 - Faça um programa que receba do usuário um arquivo texto e mostre na tela quantas letras são vogais. */
 
 #include <stdio.h>
 #include <string.h>
-#include <stdio_ext.h>
 #include <stdlib.h>
 
 void abrir_arquivo(char *nome_arquivo) { // [FUNÇÃO DE ABRIR ARQUIVO]
@@ -15,17 +14,16 @@ void abrir_arquivo(char *nome_arquivo) { // [FUNÇÃO DE ABRIR ARQUIVO]
 }
 
 int contar_vogais(char *nome_arq) { // [FUNÇÃO DE CONTAR VOGAIS]
-  FILE *arq;
-  char c;
-  int cont = 0;
-  char vogais_aux[] = "aeiouAEIOU";
-  arq = fopen(nome_arq, "r");
+  FILE *arq = arq = fopen(nome_arq, "r");
   if (arq == NULL) {
     printf("\nErro ao abrir o arquivo\n");
     exit(1);
   }
+  char c;
+  int cont = 0;
+  char vogais_aux[] = "aeiouAEIOU";
   while (fscanf(arq, "%c", &c) != EOF) {
-    if (strchr(vogais_aux, c) != NULL) {
+    if (strchr(vogais_aux, c)) {
       cont++;
     } 
   }

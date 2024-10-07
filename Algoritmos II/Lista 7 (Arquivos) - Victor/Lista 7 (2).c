@@ -1,11 +1,11 @@
-/*2 - Faça um programa que receba do usuário um arquivo texto e mostre na tela quantas linhas esse arquivo possui. */
+/* 2 - Faça um programa que receba do usuário um arquivo texto e mostre na tela quantas linhas esse arquivo possui. */
 
 #include <stdio.h>
 #include <stdlib.h>
 
 void abrir_arquivo(char *nome_arquivo) { // [FUNÇÃO DE ABRIR ARQUIVO]
   FILE *arquivo = fopen(nome_arquivo, "a");
-  if (!arquivo) {
+  if (arquivo == NULL) {
     printf("\nErro ao abrir o arquivo\n");
     exit(1);
   }
@@ -13,11 +13,10 @@ void abrir_arquivo(char *nome_arquivo) { // [FUNÇÃO DE ABRIR ARQUIVO]
 }
 
 int strlen_arquivo(char *nome_arquivo) { // [FUNÇÃO DE CONTAR LINHAS DE ARQUIVO]
-  FILE *arquivo;
+  FILE *arquivo = fopen(nome_arquivo, "r");
   int cont = 1;
   char c;
-  arquivo = fopen(nome_arquivo, "r");
-  if (!arquivo) {
+  if (arquivo == NULL) {
     printf("\nErro ao abrir o arquivo!\n");
     exit(1);
   }
@@ -34,6 +33,5 @@ int main(void) {
   abrir_arquivo("arquivo.txt");
   int cont = strlen_arquivo("arquivo.txt");
   printf("\nO arquivo possui %d linhas", cont);
-  printf("Tudo Certo");
   return 0;
 }

@@ -2,12 +2,11 @@
 
 #include <stdio.h>
 #include <string.h>
-#include <stdio_ext.h>
 #include <stdlib.h>
 
 void abrir_arquivo(char *nome_arquivo) { // [FUNÇÃO DE ABRIR ARQUIVO]
   FILE *arquivo = fopen(nome_arquivo, "a");
-  if (!arquivo) {
+  if (arquivo == NULL) {
     printf("\nErro ao abrir o arquivo\n");
     exit(1);
   }

@@ -5,6 +5,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <c_plus.h>
 
 void limpa_buffer() {
   char c;
@@ -16,6 +17,12 @@ float investCorrig(int tip, float val) { // Função p/ calcular o valor corrigi
 }
 
 int main(void) {
+  List listaNum = newList();
+  insertAtBegin(listaNum, 1);
+  insertAtBegin(listaNum, 2);
+  insertAtEnd(listaNum, 6);
+  destroyList(listaNum);
+  printsf("Lista: %L\n", listaNum);
   int tipo;
   float valor, result;
   do { // Validação da entrada do tipo de investimento
