@@ -5,6 +5,7 @@
 #include <time.h>
 #include <math.h>
 #include <unistd.h>
+#include <stdarg.h>
 
 typedef struct datas { // [STRUCT DE DATA]
   int dia, mes, ano;
@@ -83,15 +84,9 @@ void limpa_tela() { // [FUNÇÃO DE LIMPAR TELA]
 int strlen_ext(char *str) { // [FUNÇÃO DE CONTAR CARACTERES "MELHORADA"]
   int i, tam = 0, ASCII = 0;
   for (i = 0; str[i] != '\0'; i++) {
-    if (str[i] == '\033') {
-      ASCII = 1;
-    } 
-      else if (ASCII && str[i] == 'm') {
-        ASCII = 0;
-      } 
-        else if (!ASCII) {
-          tam++;
-        }
+    if (str[i] == '\033') ASCII = 1;
+    else if (ASCII && str[i] == 'm') ASCII = 0;
+    else if (!ASCII) tam++;
   }
   return tam;
 }
@@ -105,9 +100,7 @@ void centralizar(char *format, ...) { // [FUNÇÃO DE CENTRALIZAR TEXTO]
   int i, espacos, tam = strlen_ext(str);
   int linha = strlen_ext("\033[38;5;51m<>\033[0m==============\033[38;5;201m<>\033[0m==============\033[38;5;51m<>\033[0m");
   espacos = (linha - tam) / 2;
-  for (i = 0; i < espacos; i++) {
-    printf(" ");
-  }
+  for (i = 0; i < espacos; i++) printf(" ");
   printf("%s", str);
 }
 
@@ -117,19 +110,13 @@ void barra(char *ini, char *fin) { // [FUNÇÃO DE BARRAS DE DELIMITAÇÃO]
 
 int sizeof_string(char **str) { // [FUNÇÃO DE CONTAR O TAMANHO DE UMA STRING]
   int i, lim = 0;
-  for (i = 0; str[i] != NULL; i++) {
-    lim++;
-  }
+  for (i = 0; str[i] != NULL; i++) lim++;
   return lim;
 }
 
 int ver_acentos(char c) { // [FUNÇÃO DE VERIFICAR CARACTERES ACCENTUADOS]
   char acentos[] = "áéíóúàèìòùâêîôûãõäëïöüçÁÉÍÓÚÀÈÌÒÙÂÊÎÔÛÃÕÄËÏÖÜÇ";
-  for (int i = 0; i < strlen(acentos); i++) {
-    if (c == acentos[i]) {
-      return 1;
-    }
-  }
+  for (int i = 0; i < strlen(acentos); i++) if (c == acentos[i]) return 1;
   return 0;
 }
 
@@ -138,155 +125,75 @@ int ver_str(char *str) { // [FUNÇÃO DE VERIFICAR SE UM NOME É VÁLIDO]
   for (i = 0; str[i] != '\0'; i++) {
     if (!isspace(str[i])) {
       espaco = 0;
-      while (str[i] != '\0') {
-        i++;
-      }
+      while (str[i] != '\0') i++;
     }
   }
-  if (espaco) {
-    return 0;
-  }
-  for (i = 0; str[i] != '\0'; i++) {
-    if (!isalpha(str[i]) && !isspace(str[i]) && !ver_acentos(str[i])) {
-      return 0;
-    }
-  }
+  if (espaco) return 0;
+  for (i = 0; str[i] != '\0'; i++) if (!isalpha(str[i]) && !isspace(str[i]) && !ver_acentos(str[i])) return 0;
   return 1;
 }
 
 int ver_num(char *num) { // [FUNÇÃO DE VERIFICAR NÚMERO DE TELEFONE] 
   int i, tam = strlen(num);
-  if (tam != 10) {
-    return 0; 
-  }
-  for (i = 0; i < tam; i++) {
-    if (!isdigit(num[i])) {
-      return 0;
-    }
-  }
+  if (tam != 10) return 0; 
+  for (i = 0; i < tam; i++) if (!isdigit(num[i])) return 0;
   return 1;
 }
 
 int bissexto(int ano) { // [FUNÇÃO DE VERIFICAR ANO BISSEXTO]
-  if (ano % 400 == 0) {
-    return 1;
-  } 
-    else if (ano % 100 == 0) {
-      return 0;
-    } 
-      else if (ano % 4 == 0) {
-        return 1;
-      } 
-        else {
-          return 0;
-        }
+  if (ano % 400 == 0) return 1;
+  else if (ano % 100 == 0) return 0;
+  else if (ano % 4 == 0) return 1;
+  return 0;
 }
 
 int ver_data(int dia, int mes, int ano) { // [FUNÇÃO DE VERIFICAR DATA]
-  if (ano < 0 || mes < 1 || mes > 12 || dia < 1 || dia > 31) {
-    return 0;
-  }
+  if (ano < 0 || mes < 1 || mes > 12 || dia < 1 || dia > 31) return 0;
   if (mes == 2) {
-    if (bissexto(ano) && dia > 29) {
-      return 0;
-    } 
-      else if (!bissexto(ano) && dia > 28) {
-        return 0;
-      }
+    if (bissexto(ano) && dia > 29) return 0;
+    else if (!bissexto(ano) && dia > 28) return 0;
   }
-  if (mes == 4 || mes == 6 || mes == 9 || mes == 11) {
-    if (dia > 30) {
-      return 0;
-    }
-  }
+  if (dia > 30 && (mes == 4 || mes == 6 || mes == 9 || mes == 11)) return 0;
   return 1;
 }
 
 int ver_avent_eqp(rpg FRPG, avent vep) { // [FUNÇÃO DE VERIFICAR SE O AVENTUREIRO TEM EQUIPAMENTO]
-  for (int i = 0; FRPG.tipos[i]; i++) {
-    if (vep.eqp[i].vid > 0) {
-      return 1;
-    }
-  }
+  for (int i = 0; FRPG.tipos[i]; i++) if (vep.eqp[i].vid > 0) return 1;
   return 0;
 }
 
 int ver_aleatorio(int *sav, int tam, int val) { // [FUNÇÃO DE VERIFICAR SE O VALOR JÁ FOI SORTEADO]
-  for (int i = 0; i < tam; i++) {
-    if (sav[i] == val) {
-      return 0;
-    }
-  }
+  for (int i = 0; i < tam; i++) if (sav[i] == val) return 0;
   return 1;
 }
 
 int ver_id_avent(rpg FRPG, int ID, int ct) { // [FUNÇÃO DE VERIFICAR SE O ID DO AVENTUREIRO JÁ EXISTE]
-  if (ID <= 0) {
-    return 0;
-  }
-    else {
-      for (int i = 0; i < ct; i++) {
-        if (FRPG.avt[i].ID_alma == ID) {
-          return 0;
-        }
-      }
-      return 1;
-    }
+  if (ID <= 0) return 0;
+  for (int i = 0; i < ct; i++) if (FRPG.avt[i].ID_alma == ID) return 0;
+  return 1;
 }
 
 int ver_id_eqp(rpg FRPG, int ID, int ct) { // [FUNÇÃO DE VERIFICAR SE O ID DO EQUIPAMENTO JÁ EXISTE]
-  if (ID <= 0) {
-    return 0;
-  }
-    else {
-      for (int i = 0; i < ct; i++) {
-        if (FRPG.eqp[i].ID == ID) {
-          return 0;
-        }
-      }
-      return 1;
-    }
+  if (ID <= 0) return 0;
+  for (int i = 0; i < ct; i++) if (FRPG.eqp[i].ID == ID) return 0;
+  return 1;
 }
 
 int ver_id_item(rpg FRPG, int ID, int ct) { // [FUNÇÃO DE VERIFICAR SE O ID DO ITEM JÁ EXISTE]
-  if (ID <= 0) {
-    return 0;
-  }
-    else {
-      for (int i = 0; i < ct; i++) {
-        if (FRPG.itm[i].ID == ID) {
-          return 0;
-        }
-      }
-      return 1;
-    }
+  if (ID <= 0) return 0;
+  for (int i = 0; i < ct; i++) if (FRPG.itm[i].ID == ID) return 0;
+  return 1;
 }
 
 int ver_id_item_loja(rpg FRPG, int ID, int ct) { // [FUNÇÃO DE VERIFICAR SE O ID DO ITEM DA LOJA JÁ EXISTE]
-  if (ID <= 0) {
-    return 0;
-  }
-    else {
-      for (int i = 0; i < ct; i++) {
-        if (FRPG.loja_itm[i].ID == ID) {
-          return 0;
-        }
-      }
-      return 1;
-    }
+  if (ID <= 0) return 0;
+  for (int i = 0; i < ct; i++) if (FRPG.loja_itm[i].ID == ID) return 0;
+  return 1;
 }
 
 int ver_id_vend(rpg FRPG, int ID, int ct) { // [FUNÇÃO DE VERIFICAR ID DE COMPRA]
-  if (ID <= 0) { 
-    return 0;
-  }
-    else {
-      for (int i = 0; i < ct; i++) { 
-        if (FRPG.vend[i].ID == ID) {
-          return 0;
-        }
-      }
-    }
+  if (ID <= 0) return 0;
+  for (int i = 0; i < ct; i++) if (FRPG.vend[i].ID == ID) return 0;
   return 1;
 }
 
@@ -302,23 +209,15 @@ void ver_venda(rpg FRPG, int ct_v) { // [FUNÇÃO DE VERIFICAR VENDAS]
     scanf("%d", &valor);
     limpa_buffer();
     barra("", "\n");
-    if (valor < 0) {
-      printf("\n\033[38;5;196m[Valor inválido! Tente novamente...]\033[0m\n");
-    }
+    if (valor < 0) printf("\n\033[38;5;196m[Valor inválido! Tente novamente...]\033[0m\n");
   } while (valor < 0);
-  for (i = 0; i < ct_v; i++) {
-    if (FRPG.vend[i].val > valor) {
-      qtd++;
-    }
+  for (i = 0; i < ct_v; i++) if (FRPG.vend[i].val > valor) qtd++;
+  if (qtd == 0) printf("\n\033[38;5;196m[Não há vendas acima desse valor!]\033[0m\n");
+  else {
+    barra("\n", "\n");
+    printf("\033[38;5;208m[QTDE de vendas com valor \nacima de \033[38;5;220m[¢]\033[38;5;208m%d: %d]\033[0m", valor, qtd);
+    barra("\n", "\n");
   }
-  if (qtd == 0) {
-    printf("\n\033[38;5;196m[Não há vendas acima desse valor!]\033[0m\n");
-  }
-    else {
-      barra("\n", "\n");
-      printf("\033[38;5;208m[QTDE de vendas com valor \nacima de \033[38;5;220m[¢]\033[38;5;208m%d: %d]\033[0m", valor, qtd);
-      barra("\n", "\n");
-    }
 }
 
 void ver_estoq(rpg FRPG, int ct_l) { // [FUNÇÃO DE VERIFICAR ESTOQUE]
@@ -333,9 +232,7 @@ void ver_estoq(rpg FRPG, int ct_l) { // [FUNÇÃO DE VERIFICAR ESTOQUE]
     scanf("%d", &estoq);
     limpa_buffer();
     barra("", "\n");
-    if (estoq < 0) {
-      printf("\n\033[38;5;196m[Quantidade inválida! Tente novamente...]\033[0m\n");
-    }
+    if (estoq < 0) printf("\n\033[38;5;196m[Quantidade inválida! Tente novamente...]\033[0m\n");
   } while (estoq < 0);
   limpa_tela();
   barra("\n", "\n");
@@ -352,26 +249,16 @@ void ver_estoq(rpg FRPG, int ct_l) { // [FUNÇÃO DE VERIFICAR ESTOQUE]
       aux = 1;
     }
   }
-  if (!aux) {
-    printf("\n\033[38;5;196m[Não há itens com estoque abaixo de %d!]\033[0m\n", estoq);
-  }
+  if (!aux) printf("\n\033[38;5;196m[Não há itens com estoque abaixo de %d!]\033[0m\n", estoq);
 }
 
 int ver_item_vend(rpg FRPG, int ID, int ct_v) { // [FUNÇÃO DE VERIFICAR ITEM NA COMPRA]
-  for (int i = 0; i < ct_v; i++) { 
-    if (ID == FRPG.vend[i].prdt_v.ID) {
-      return 0;
-    }
-  }
+  for (int i = 0; i < ct_v; i++) if (ID == FRPG.vend[i].prdt_v.ID) return 0;
   return 1;
 } 
 
 int ver_avent_vend(rpg FRPG, int ID, int ct_v) { // [FUNÇÃO DE VERIFICAR AVENTUREIRO NA VENDA]
-  for (int i = 0; i < ct_v; i++) {
-    if (ID == FRPG.vend[i].cl_v.ID_alma) {
-      return 1;
-    }
-  }
+  for (int i = 0; i < ct_v; i++) if (ID == FRPG.vend[i].cl_v.ID_alma) return 1;
   return 0;
 } 
 
@@ -390,9 +277,7 @@ int sim_nao() { // [FUNÇÃO DE SIM OU NÃO]
     scanf("%d", &opcao);
     limpa_buffer();
     barra("", "\n");
-    if (opcao < 0 || opcao > 1) {
-      printf("\n\033[38;5;196m[Opção inválida! Tente novamente...]\033[0m\n");
-    }
+    if (opcao < 0 || opcao > 1) printf("\n\033[38;5;196m[Opção inválida! Tente novamente...]\033[0m\n");
   } while (opcao < 0 || opcao > 1);
   return opcao;
 }
@@ -422,12 +307,11 @@ void list_eqp_avent(rpg FRPG, avent lea) { // [FUNÇÃO DE LISTAR EQUIPAMENTOS D
       printf("|\033[38;5;51m[Def: %2d]\033[0m|\n", lea.eqp[i].def);
       printf("|\033[38;5;51m[Vel: %2d]\033[0m|", lea.eqp[i].vel);
       barra("\n", "\n");
+    } else {
+      barra("", "\n");
+      printf("[\033[38;5;205m%d\033[0m]> \033[38;5;51m[%s] Vazio\033[0m", i + 1, FRPG.tipos[i]);
+      barra("\n", "\n");
     }
-      else {
-        barra("", "\n");
-        printf("[\033[38;5;205m%d\033[0m]> \033[38;5;51m[%s] Vazio\033[0m", i + 1, FRPG.tipos[i]);
-        barra("\n", "\n");
-      }
   }
 }
 
@@ -599,39 +483,30 @@ void ger_habil(rpg FRPG, habil *gha, int posi, int ct) { // [FUNÇÃO DE GERAR H
   int i, j, mod, *aux, temp, lim1 = 0, lim2 = 0;
   gha->ID = posi + ct + 1;
   gha->mult = (double) rand() / RAND_MAX * 2 + 1;
-  for (i = 0; FRPG.habil_nomes[i] != NULL; i++) {
-    lim1++;
-  }
+  for (i = 0; FRPG.habil_nomes[i] != NULL; i++) lim1++;
   strcpy(gha->nome, FRPG.habil_nomes[rand() % lim1]);
-  for (i = 0; FRPG.habil_mods[i] != NULL; i++) {
-    lim2++;
-  }
+  for (i = 0; FRPG.habil_mods[i] != NULL; i++) lim2++;
   if (posi == 0) {
     strcat(gha->desc, "[");
     strcat(gha->desc, FRPG.habil_mods[rand() % lim2]);
     strcat(gha->desc, "]");
     strcpy(gha->tipo, FRPG.habil_tipos[0]);
     gha->cooldown = 0;
-  }
-    else {
-      aux = (int *) calloc(lim2, sizeof(int));
-      mod = rand() % lim2 + 1;
-      for (i = 0; i < mod; i++) {
-        do {
-          temp = rand() % lim2;
-        } while (!ver_aleatorio(aux, i, temp));
-        strcat(gha->desc, "[");
-        strcat(gha->desc, FRPG.habil_mods[temp]);
-        strcat(gha->desc, "]");
-        if (i + 1 < mod) {
-          strcat(gha->desc, "\n");
-        }
-        aux[i] = temp;
-      }
-      gha->cooldown = mod;
-      strcpy(gha->tipo, FRPG.habil_tipos[rand() % 3]);
-      free(aux);
+  } else {
+    aux = (int *) calloc(lim2, sizeof(int));
+    mod = rand() % lim2 + 1;
+    for (i = 0; i < mod; i++) {
+      do temp = rand() % lim2; while (!ver_aleatorio(aux, i, temp));
+      strcat(gha->desc, "[");
+      strcat(gha->desc, FRPG.habil_mods[temp]);
+      strcat(gha->desc, "]");
+      if (i + 1 < mod) strcat(gha->desc, "\n");
+      aux[i] = temp;
     }
+    gha->cooldown = mod;
+    strcpy(gha->tipo, FRPG.habil_tipos[rand() % 3]);
+    free(aux);
+  }
 }
 
 void regist_avent(rpg *FRPG, avent *avt, int *ct_a) { // [FUNÇÃO DE REGISTRAR AVENTUREIRO]
@@ -646,9 +521,7 @@ void regist_avent(rpg *FRPG, avent *avt, int *ct_a) { // [FUNÇÃO DE REGISTRAR 
     scanf("%d", &temp);
     limpa_buffer();
     barra("", "\n");
-    if (!ver_id_avent(*FRPG, temp, *ct_a)) {
-      printf("\n\033[38;5;196m[ID inválido! Tente novamente...]\033[0m\n");
-    }
+    if (!ver_id_avent(*FRPG, temp, *ct_a)) printf("\n\033[38;5;196m[ID inválido! Tente novamente...]\033[0m\n");
   } while (!ver_id_avent(*FRPG, temp, *ct_a));
   avt->ID_alma = temp;
   do {
@@ -661,9 +534,7 @@ void regist_avent(rpg *FRPG, avent *avt, int *ct_a) { // [FUNÇÃO DE REGISTRAR 
     scanf("%49[^\n]", avt->nome);
     limpa_buffer();
     barra("", "\n");
-    if (!ver_str(avt->nome)) {
-      printf("\n\033[38;5;196m[Nome inválido! Tente novamente...]\033[0m\n");
-    }
+    if (!ver_str(avt->nome)) printf("\n\033[38;5;196m[Nome inválido! Tente novamente...]\033[0m\n");
   } while (!ver_str(avt->nome));
   do {
     limpa_tela();
@@ -672,17 +543,13 @@ void regist_avent(rpg *FRPG, avent *avt, int *ct_a) { // [FUNÇÃO DE REGISTRAR 
     barra("\n", "\n");
     centralizar("\033[38;5;201m[REGISTRAR AVENTUREIRO]\033[0m");
     barra("\n", "");
-    for (i = 0; i < aux; i++) {
-      printf("\n[\033[38;5;51m%d\033[0m]> %s", i + 1, FRPG->classes[i]);
-    }
+    for (i = 0; i < aux; i++) printf("\n[\033[38;5;51m%d\033[0m]> %s", i + 1, FRPG->classes[i]);
     barra("\n", "\n");
     printf("Classe\033[38;5;51m: ");
     scanf("%d", &opcao);
     limpa_buffer();
     barra("", "\n");
-    if (opcao < 1 || opcao > aux) {
-      printf("\n\033[38;5;196m[Classe inválida! Tente novamente...]\033[0m\n");
-    }
+    if (opcao < 1 || opcao > aux) printf("\n\033[38;5;196m[Classe inválida! Tente novamente...]\033[0m\n");
   } while (opcao < 1 || opcao > aux);
   strcpy(avt->classe, FRPG->classes[opcao - 1]);
   printf("\n\033[38;5;220m[Classe escolhida: %s]\033[0m\n", avt->classe);
@@ -696,9 +563,7 @@ void regist_avent(rpg *FRPG, avent *avt, int *ct_a) { // [FUNÇÃO DE REGISTRAR 
     scanf("%49[^\n]", avt->tel);
     limpa_buffer();
     barra("", "\n");
-    if (!ver_num(avt->tel)) {
-      printf("\n\033[38;5;196m[Nº inválido! Tente novamente...]\033[0m\n");
-    }
+    if (!ver_num(avt->tel)) printf("\n\033[38;5;196m[Nº inválido! Tente novamente...]\033[0m\n");
   } while (!ver_num(avt->tel));
   do {
     limpa_tela();
@@ -710,9 +575,7 @@ void regist_avent(rpg *FRPG, avent *avt, int *ct_a) { // [FUNÇÃO DE REGISTRAR 
     scanf("%d/%d/%d", &avt->nasc.dia, &avt->nasc.mes, &avt->nasc.ano);
     limpa_buffer();
     barra("", "\n");
-    if (!ver_data(avt->nasc.dia, avt->nasc.mes, avt->nasc.ano)) {
-      printf("\n\033[38;5;196m[Data inválida! Tente novamente...]\033[0m\n");
-    }
+    if (!ver_data(avt->nasc.dia, avt->nasc.mes, avt->nasc.ano)) printf("\n\033[38;5;196m[Data inválida! Tente novamente...]\033[0m\n");
   } while (!ver_data(avt->nasc.dia, avt->nasc.mes, avt->nasc.ano));
   do {
     limpa_tela();
@@ -724,9 +587,7 @@ void regist_avent(rpg *FRPG, avent *avt, int *ct_a) { // [FUNÇÃO DE REGISTRAR 
     scanf("%49[^\n]", avt->end.rua);
     limpa_buffer();
     barra("", "\n");
-    if (!ver_str(avt->end.rua)) {
-      printf("\n\033[38;5;196m[Rua inválida! Tente novamente...]\033[0m\n");
-    }
+    if (!ver_str(avt->end.rua)) printf("\n\033[38;5;196m[Rua inválida! Tente novamente...]\033[0m\n");
   } while (!ver_str(avt->end.rua));
   do {
     limpa_tela();
@@ -738,9 +599,7 @@ void regist_avent(rpg *FRPG, avent *avt, int *ct_a) { // [FUNÇÃO DE REGISTRAR 
     scanf("%d", &avt->end.num);
     limpa_buffer();
     barra("", "\n");
-    if (avt->end.num <= 0) {
-      printf("\n\033[38;5;196m[Número inválido! Tente novamente...]\033[0m\n");
-    }
+    if (avt->end.num <= 0) printf("\n\033[38;5;196m[Número inválido! Tente novamente...]\033[0m\n");
   } while (avt->end.num <= 0);
   do {
     limpa_tela();
@@ -752,9 +611,7 @@ void regist_avent(rpg *FRPG, avent *avt, int *ct_a) { // [FUNÇÃO DE REGISTRAR 
     scanf("%49[^\n]", avt->end.cidade);
     limpa_buffer();
     barra("", "\n");
-    if (!ver_str(avt->end.cidade)) {
-      printf("\n\033[38;5;196m[Cidade inválida! Tente novamente...]\033[0m\n");
-    }
+    if (!ver_str(avt->end.cidade)) printf("\n\033[38;5;196m[Cidade inválida! Tente novamente...]\033[0m\n");
   } while (!ver_str(avt->end.cidade));
   do {
     limpa_tela();
@@ -766,9 +623,7 @@ void regist_avent(rpg *FRPG, avent *avt, int *ct_a) { // [FUNÇÃO DE REGISTRAR 
     scanf("%49[^\n]", avt->end.estado);
     limpa_buffer();
     barra("", "\n");
-    if (!ver_str(avt->end.estado)) {
-      printf("\n\033[38;5;196m[Estado inválido! Tente novamente...]\033[0m\n");
-    }
+    if (!ver_str(avt->end.estado)) printf("\n\033[38;5;196m[Estado inválido! Tente novamente...]\033[0m\n");
   } while (!ver_str(avt->end.estado));
   limpa_tela();
   barra("\n", "\n");
@@ -783,9 +638,7 @@ void regist_avent(rpg *FRPG, avent *avt, int *ct_a) { // [FUNÇÃO DE REGISTRAR 
   limpa_tela();
   barra("\n", "\n");
   centralizar("\033[38;5;220m[Aleatorizando habilidades...]\033[0m");
-  for (i = 0; FRPG->habil_tipos[i] != NULL; i++) {
-    ger_habil(*FRPG, &avt->hab[i], i, *ct_a);
-  }
+  for (i = 0; FRPG->habil_tipos[i] != NULL; i++) ger_habil(*FRPG, &avt->hab[i], i, *ct_a);
   list_hab_avent(*FRPG, *avt);
   (*ct_a)++;
   FRPG->rubi -= 10;
@@ -805,9 +658,7 @@ void alter_avent(rpg *FRPG, avent *avt, int ct_a) {
     scanf("%d", &temp);
     limpa_buffer();
     barra("", "\n");
-    if (!ver_id_avent(*FRPG, temp, ct_a)) {
-      printf("\n\033[38;5;196m[ID inválido! Tente novamente...]\033[0m\n");
-    }
+    if (!ver_id_avent(*FRPG, temp, ct_a)) printf("\n\033[38;5;196m[ID inválido! Tente novamente...]\033[0m\n");
   } while (!ver_id_avent(*FRPG, temp, ct_a));
   avt->ID_alma = temp;
   do {
@@ -820,9 +671,7 @@ void alter_avent(rpg *FRPG, avent *avt, int ct_a) {
     scanf("%49[^\n]", avt->nome);
     limpa_buffer();
     barra("", "\n");
-    if (!ver_str(avt->nome)) {
-      printf("\n\033[38;5;196m[Nome inválido! Tente de  novamente...]\033[0m\n");
-    }
+    if (!ver_str(avt->nome)) printf("\n\033[38;5;196m[Nome inválido! Tente de  novamente...]\033[0m\n");
   } while (!ver_str(avt->nome));
   do {
     limpa_tela();
@@ -831,17 +680,13 @@ void alter_avent(rpg *FRPG, avent *avt, int ct_a) {
     barra("\n", "\n");
     centralizar("\033[38;5;201m[REGISTRAR AVENTUREIRO]\033[0m");
     barra("\n", "");
-    for (i = 0; i < aux; i++) {
-      printf("\n[\033[38;5;51m%d\033[0m]> %s", i + 1, FRPG->classes[i]);
-    }
+    for (i = 0; i < aux; i++) printf("\n[\033[38;5;51m%d\033[0m]> %s", i + 1, FRPG->classes[i]);
     barra("\n", "\n");
     printf("Nova classe\033[38;5;51m: ");
     scanf("%d", &opcao);
     limpa_buffer();
     barra("", "\n");
-    if (opcao < 1 || opcao > aux) {
-      printf("\n\033[38;5;196m[Classe inválida! Tente novamente...]\033[0m\n");
-    }
+    if (opcao < 1 || opcao > aux) printf("\n\033[38;5;196m[Classe inválida! Tente novamente...]\033[0m\n");
   } while (opcao < 1 || opcao > aux);
   strcpy(avt->classe, FRPG->classes[opcao - 1]);
   printf("\n\033[38;5;220m[Classe escolhida: %s]\033[0m\n", avt->classe);
@@ -855,9 +700,7 @@ void alter_avent(rpg *FRPG, avent *avt, int ct_a) {
     scanf("%49[^\n]", avt->tel);
     limpa_buffer();
     barra("", "\n");
-    if (!ver_num(avt->tel)) {
-      printf("\n\033[38;5;196m[Nº inválido! Tente novamente...]\033[0m\n");
-    }
+    if (!ver_num(avt->tel)) printf("\n\033[38;5;196m[Nº inválido! Tente novamente...]\033[0m\n");
   } while (!ver_num(avt->tel));
   do {
     limpa_tela();
@@ -869,9 +712,7 @@ void alter_avent(rpg *FRPG, avent *avt, int ct_a) {
     scanf("%d/%d/%d", &avt->nasc.dia, &avt->nasc.mes, &avt->nasc.ano);
     limpa_buffer();
     barra("", "\n");
-    if (!ver_data(avt->nasc.dia, avt->nasc.mes, avt->nasc.ano)) {
-      printf("\n\033[38;5;196m[Data inválida! Tente novamente...]\033[0m\n");
-    }
+    if (!ver_data(avt->nasc.dia, avt->nasc.mes, avt->nasc.ano)) printf("\n\033[38;5;196m[Data inválida! Tente novamente...]\033[0m\n");
   } while (!ver_data(avt->nasc.dia, avt->nasc.mes, avt->nasc.ano));
   do {
     limpa_tela();
@@ -883,9 +724,7 @@ void alter_avent(rpg *FRPG, avent *avt, int ct_a) {
     scanf("%49[^\n]", avt->end.rua);
     limpa_buffer();
     barra("", "\n");
-    if (!ver_str(avt->end.rua)) {
-      printf("\n\033[38;5;196m[Rua inválida! Tente novamente...]\033[0m\n");
-    }
+    if (!ver_str(avt->end.rua)) printf("\n\033[38;5;196m[Rua inválida! Tente novamente...]\033[0m\n");
   } while (!ver_str(avt->end.rua));
   do {
     limpa_tela();
@@ -897,9 +736,7 @@ void alter_avent(rpg *FRPG, avent *avt, int ct_a) {
     scanf("%d", &avt->end.num);
     limpa_buffer();
     barra("", "\n");
-    if (avt->end.num <= 0) {
-      printf("\n\033[38;5;196m[Número inválido! Tente novamente...]\033[0m\n");
-    }
+    if (avt->end.num <= 0) printf("\n\033[38;5;196m[Número inválido! Tente novamente...]\033[0m\n");
   } while (avt->end.num <= 0);
   do {
     limpa_tela();
@@ -911,9 +748,7 @@ void alter_avent(rpg *FRPG, avent *avt, int ct_a) {
     scanf("%49[^\n]", avt->end.cidade);
     limpa_buffer();
     barra("", "\n");
-    if (!ver_str(avt->end.cidade)) {
-      printf("\n\033[38;5;196m[Cidade inválida! Tente novamente...]\033[0m\n");
-    }
+    if (!ver_str(avt->end.cidade)) printf("\n\033[38;5;196m[Cidade inválida! Tente novamente...]\033[0m\n");
   } while (!ver_str(avt->end.cidade));
   do {
     limpa_tela();
@@ -925,9 +760,7 @@ void alter_avent(rpg *FRPG, avent *avt, int ct_a) {
     scanf("%49[^\n]", avt->end.estado);
     limpa_buffer();
     barra("", "\n");
-    if (!ver_str(avt->end.estado)) {
-      printf("\n\033[38;5;196m[Estado inválido! Tente novamente...]\033[0m\n");
-    }
+    if (!ver_str(avt->end.estado)) printf("\n\033[38;5;196m[Estado inválido! Tente novamente...]\033[0m\n");
   } while (!ver_str(avt->end.estado));
   limpa_tela();
   barra("\n", "\n");
@@ -942,9 +775,7 @@ void alter_avent(rpg *FRPG, avent *avt, int ct_a) {
   limpa_tela();
   barra("\n", "\n");
   centralizar("\033[38;5;220m[Aleatorizando novas habilidades...]\033[0m");
-  for (i = 0; FRPG->habil_tipos[i] != NULL; i++) {
-    ger_habil(*FRPG, &avt->hab[i], i, ct_a);
-  }
+  for (i = 0; FRPG->habil_tipos[i] != NULL; i++) ger_habil(*FRPG, &avt->hab[i], i, ct_a);
   list_hab_avent(*FRPG, *avt);
   FRPG->rubi -= 5;
   printf("\n\n[\033[38;5;196m-5[◊]\033[0m]\n");
@@ -963,9 +794,7 @@ void forj_epq(rpg *FRPG, equip *eqt, int *ct_e) { // [FUNÇÃO DE FORJAR EQUIPAM
     scanf("%d", &temp);
     limpa_buffer();
     barra("", "\n");
-    if (!ver_id_eqp(*FRPG, temp, *ct_e)) {
-      printf("\n\033[38;5;196m[ID inválido! Tente novamente...]\033[0m\n");
-    }
+    if (!ver_id_eqp(*FRPG, temp, *ct_e)) printf("\n\033[38;5;196m[ID inválido! Tente novamente...]\033[0m\n");
   } while (!ver_id_eqp(*FRPG, temp, *ct_e));
   eqt->ID = temp;
   do {
@@ -978,9 +807,7 @@ void forj_epq(rpg *FRPG, equip *eqt, int *ct_e) { // [FUNÇÃO DE FORJAR EQUIPAM
     scanf("%49[^\n]", eqt->nome);
     limpa_buffer();
     barra("", "\n");
-    if (!ver_str(eqt->nome)) {
-      printf("\n\033[38;5;196m[Nome inválido! Tente novamente...]\033[0m\n");
-    }
+    if (!ver_str(eqt->nome)) printf("\n\033[38;5;196m[Nome inválido! Tente novamente...]\033[0m\n");
   } while (!ver_str(eqt->nome));
   do {
     limpa_tela();
@@ -989,17 +816,13 @@ void forj_epq(rpg *FRPG, equip *eqt, int *ct_e) { // [FUNÇÃO DE FORJAR EQUIPAM
     barra("\n", "\n");
     centralizar("\033[38;5;201m[FORJAR EQUIPAMENTO]\033[0m");
     barra("\n", "");
-    for (i = 0; i < aux; i++) {
-      printf("\n[\033[38;5;51m%d\033[0m]> %s", i + 1, FRPG->tipos[i]);
-    }
+    for (i = 0; i < aux; i++) printf("\n[\033[38;5;51m%d\033[0m]> %s", i + 1, FRPG->tipos[i]);
     barra("\n", "\n");
     printf("Tipo\033[38;5;51m: ");
     scanf("%d", &opcao);
     limpa_buffer();
     barra("", "\n");
-    if (opcao < 1 || opcao > aux) {
-      printf("\n\033[38;5;196m[Opção inválida! Tente novamente...]\033[0m\n");
-    }
+    if (opcao < 1 || opcao > aux) printf("\n\033[38;5;196m[Opção inválida! Tente novamente...]\033[0m\n");
   } while (opcao < 1 || opcao > aux);
   strcpy(eqt->tipo, FRPG->tipos[opcao - 1]);
   printf("\n\033[38;5;220m[Tipo escolhido: %s]\033[0m\n", eqt->tipo);
@@ -1031,9 +854,7 @@ void alter_eqp(rpg *FRPG, equip *eqt, int ct_e) { // [FUNÇÃO DE ALTERAR EQUIPA
     scanf("%d", &temp);
     limpa_buffer();
     barra("", "\n");
-    if (!ver_id_eqp(*FRPG, temp, ct_e)) {
-      printf("\n\033[38;5;196m[ID inválido! Tente novamente...]\033[0m\n");
-    }
+    if (!ver_id_eqp(*FRPG, temp, ct_e)) printf("\n\033[38;5;196m[ID inválido! Tente novamente...]\033[0m\n");
   } while (!ver_id_eqp(*FRPG, temp, ct_e));
   eqt->ID = temp;
   do {
@@ -1046,9 +867,7 @@ void alter_eqp(rpg *FRPG, equip *eqt, int ct_e) { // [FUNÇÃO DE ALTERAR EQUIPA
     scanf("%49[^\n]", eqt->nome);
     limpa_buffer();
     barra("", "\n");
-    if (!ver_str(eqt->nome)) {
-      printf("\n\033[38;5;196m[Nome inválido! Tente novamente...]\033[0m\n");
-    }
+    if (!ver_str(eqt->nome)) printf("\n\033[38;5;196m[Nome inválido! Tente novamente...]\033[0m\n");
   } while (!ver_str(eqt->nome));
   do {
     limpa_tela();
@@ -1057,17 +876,13 @@ void alter_eqp(rpg *FRPG, equip *eqt, int ct_e) { // [FUNÇÃO DE ALTERAR EQUIPA
     barra("\n", "\n");
     centralizar("\033[38;5;201m[ALTERAR EQUIPAMENTO]\033[0m");
     barra("\n", "");
-    for (i = 0; i < aux; i++) {
-      printf("\n[\033[38;5;51m%d\033[0m]> %s", i + 1, FRPG->tipos[i]);
-    }
+    for (i = 0; i < aux; i++) printf("\n[\033[38;5;51m%d\033[0m]> %s", i + 1, FRPG->tipos[i]);
     barra("\n", "\n");
     printf("Novo tipo\033[38;5;51m: ");
     scanf("%d", &opcao);
     limpa_buffer();
     barra("", "\n");
-    if (opcao < 1 || opcao > aux) {
-      printf("\n\033[38;5;196m[Opção inválida! Tente novamente...]\033[0m\n");
-    }
+    if (opcao < 1 || opcao > aux) printf("\n\033[38;5;196m[Opção inválida! Tente novamente...]\033[0m\n");
   } while (opcao < 1 || opcao > aux);
   strcpy(eqt->tipo, FRPG->tipos[opcao - 1]);
   printf("\n\033[38;5;220m[Tipo escolhido: %s]\033[0m\n", eqt->tipo);
@@ -1098,9 +913,7 @@ void cadast_item(rpg *FRPG, item *ite, int *ct_l) { // [FUNÇÃO DE CADASTRAR IT
     scanf("%d", &temp);
     limpa_buffer();
     barra("", "\n");
-    if (!ver_id_item_loja(*FRPG, temp, *ct_l)) {
-      printf("\n\033[38;5;196m[ID inválido! Tente novamente...]\033[0m\n");
-    }
+    if (!ver_id_item_loja(*FRPG, temp, *ct_l)) printf("\n\033[38;5;196m[ID inválido! Tente novamente...]\033[0m\n");
   } while (!ver_id_item_loja(*FRPG, temp, *ct_l));
   ite->ID = temp;
   do {
@@ -1113,9 +926,7 @@ void cadast_item(rpg *FRPG, item *ite, int *ct_l) { // [FUNÇÃO DE CADASTRAR IT
     scanf("%d", &ite->val);
     limpa_buffer();
     barra("", "\n");
-    if (ite->val <= 0) {
-      printf("\n\033[38;5;196m[Valor inválido! Tente novamente...]\033[0m\n");
-    }
+    if (ite->val <= 0) printf("\n\033[38;5;196m[Valor inválido! Tente novamente...]\033[0m\n");
   } while (ite->val <= 0);
   do {
     limpa_tela();
@@ -1127,9 +938,7 @@ void cadast_item(rpg *FRPG, item *ite, int *ct_l) { // [FUNÇÃO DE CADASTRAR IT
     scanf("%49[^\n]", ite->nome);
     limpa_buffer();
     barra("", "\n");
-    if (!ver_str(ite->nome)) {
-      printf("\n\033[38;5;196m[Nome inválido! Tente novamente...]\033[0m\n");
-    }
+    if (!ver_str(ite->nome)) printf("\n\033[38;5;196m[Nome inválido! Tente novamente...]\033[0m\n");
   } while (!ver_str(ite->nome));
   do {
     limpa_tela();
@@ -1146,9 +955,7 @@ void cadast_item(rpg *FRPG, item *ite, int *ct_l) { // [FUNÇÃO DE CADASTRAR IT
     scanf("%d", &opcao);
     limpa_buffer();
     barra("", "\n");
-    if (opcao < 1 || opcao > aux) {
-      printf("\n\033[38;5;196m[Opção inválida! Tente novamente...]\033[0m\n");
-    }
+    if (opcao < 1 || opcao > aux) printf("\n\033[38;5;196m[Opção inválida! Tente novamente...]\033[0m\n");
   } while (opcao < 1 || opcao > aux);
   strcpy(ite->tipo, FRPG->itens_aux[opcao - 1]);
   printf("\n\033[38;5;220m[Tipo escolhido: %s]\033[0m\n", ite->tipo);
@@ -1162,9 +969,7 @@ void cadast_item(rpg *FRPG, item *ite, int *ct_l) { // [FUNÇÃO DE CADASTRAR IT
     scanf("%d", &ite->utl);
     limpa_buffer();
     barra("", "\n");
-    if (ite->utl <= 0 || ite->utl > 1000) {
-      printf("\n\033[38;5;196m[Efeito inválido! Tente novamente...]\033[0m\n");
-    }
+    if (ite->utl <= 0 || ite->utl > 1000) printf("\n\033[38;5;196m[Efeito inválido! Tente novamente...]\033[0m\n");
   } while (ite->utl <= 0 || ite->utl > 1000);
   do {
     limpa_tela();
@@ -1176,9 +981,7 @@ void cadast_item(rpg *FRPG, item *ite, int *ct_l) { // [FUNÇÃO DE CADASTRAR IT
     scanf("%d", &ite->qtd);
     limpa_buffer();
     barra("", "\n");
-    if (ite->qtd <= 0 || ite->qtd > 5) {
-      printf("\n\033[38;5;196m[Quantidade inválida! Tente novamente...]\033[0m\n");
-    }
+    if (ite->qtd <= 0 || ite->qtd > 5) printf("\n\033[38;5;196m[Quantidade inválida! Tente novamente...]\033[0m\n");
   } while (ite->qtd <= 0 || ite->qtd > 5);
   (*ct_l)++;
   printf("\n\033[38;5;220m[Item cadastrado com sucesso!]\033[0m\n");
@@ -1196,9 +999,7 @@ void alter_item_loja(rpg *FRPG, item *ite, int ct_i) { // [FUNÇÃO DE ALTERAR I
     scanf("%d", &temp);
     limpa_buffer();
     barra("", "\n");
-    if (!ver_id_item_loja(*FRPG, temp, ct_i)) {
-      printf("\n\033[38;5;196m[ID inválido! Tente novamente...]\033[0m\n");
-    }
+    if (!ver_id_item_loja(*FRPG, temp, ct_i)) printf("\n\033[38;5;196m[ID inválido! Tente novamente...]\033[0m\n");
   } while (!ver_id_item_loja(*FRPG, temp, ct_i));
   ite->ID = temp;
   do {
@@ -1211,9 +1012,7 @@ void alter_item_loja(rpg *FRPG, item *ite, int ct_i) { // [FUNÇÃO DE ALTERAR I
     scanf("%49[^\n]", ite->nome);
     limpa_buffer();
     barra("", "\n");
-    if (!ver_str(ite->nome)) {
-      printf("\n\033[38;5;196m[Nome inválido! Tente novamente...]\033[0m\n");
-    }
+    if (!ver_str(ite->nome)) printf("\n\033[38;5;196m[Nome inválido! Tente novamente...]\033[0m\n");
   } while (!ver_str(ite->nome));
   do {
     limpa_tela();
@@ -1230,9 +1029,7 @@ void alter_item_loja(rpg *FRPG, item *ite, int ct_i) { // [FUNÇÃO DE ALTERAR I
     scanf("%d", &opcao);
     limpa_buffer();
     barra("", "\n");
-    if (opcao < 1 || opcao > aux) {
-      printf("\n\033[38;5;196m[Opção inválida! Tente novamente...]\033[0m\n");
-    }
+    if (opcao < 1 || opcao > aux) printf("\n\033[38;5;196m[Opção inválida! Tente novamente...]\033[0m\n");
   } while (opcao < 1 || opcao > aux);
   strcpy(ite->tipo, FRPG->itens_aux[opcao - 1]);
   printf("\n\033[38;5;220m[Tipo escolhido: %s]\033[0m\n", ite->tipo);
@@ -1246,9 +1043,7 @@ void alter_item_loja(rpg *FRPG, item *ite, int ct_i) { // [FUNÇÃO DE ALTERAR I
     scanf("%d", &ite->utl);
     limpa_buffer();
     barra("", "\n");
-    if (ite->utl <= 0 || ite->utl > 1000) {
-      printf("\n\033[38;5;196m[Efeito inválido! Tente novamente...]\033[0m\n");
-    }
+    if (ite->utl <= 0 || ite->utl > 1000) printf("\n\033[38;5;196m[Efeito inválido! Tente novamente...]\033[0m\n");
   } while (ite->utl <= 0 || ite->utl > 1000);
   do {
     limpa_tela();
@@ -1260,9 +1055,7 @@ void alter_item_loja(rpg *FRPG, item *ite, int ct_i) { // [FUNÇÃO DE ALTERAR I
     scanf("%d", &ite->qtd);
     limpa_buffer();
     barra("", "\n");
-    if (ite->qtd <= 0 || ite->qtd > 5) {
-      printf("\n\033[38;5;196m[Quantidade inválida! Tente novamente...]\033[0m\n");
-    }
+    if (ite->qtd <= 0 || ite->qtd > 5) printf("\n\033[38;5;196m[Quantidade inválida! Tente novamente...]\033[0m\n");
   } while (ite->qtd <= 0 || ite->qtd > 5);
   printf("\n\033[38;5;220m[Item alterado com sucesso!]\033[0m\n");
 }
@@ -1279,9 +1072,7 @@ void alter_venda(rpg *FRPG, hist_vend *vnd, int ct_v) { // [FUNÇÃO DE ALTERAR 
     scanf("%d", &temp);
     limpa_buffer();
     barra("", "\n");
-    if (!ver_id_vend(*FRPG, temp, ct_v)) {
-      printf("\n\033[38;5;196m[ID inválido! Tente novamente...]\033[0m\n");
-    }    
+    if (!ver_id_vend(*FRPG, temp, ct_v)) printf("\n\033[38;5;196m[ID inválido! Tente novamente...]\033[0m\n");
   } while (!ver_id_vend(*FRPG, temp, ct_v));
   vnd->ID = temp;
   do {
@@ -1294,9 +1085,7 @@ void alter_venda(rpg *FRPG, hist_vend *vnd, int ct_v) { // [FUNÇÃO DE ALTERAR 
     scanf("%d/%d/%d", &vnd->dt_v.dia, &vnd->dt_v.mes, &vnd->dt_v.ano);
     limpa_buffer();
     barra("", "\n");
-    if (!ver_data(vnd->dt_v.dia, vnd->dt_v.mes, vnd->dt_v.ano)) {
-      printf("\n\033[38;5;196m[Data inválida! Tente novamente...]\033[0m\n");
-    }
+    if (!ver_data(vnd->dt_v.dia, vnd->dt_v.mes, vnd->dt_v.ano)) printf("\n\033[38;5;196m[Data inválida! Tente novamente...]\033[0m\n");
   } while (!ver_data(vnd->dt_v.dia, vnd->dt_v.mes, vnd->dt_v.ano));
   do {
     limpa_tela();
@@ -1308,9 +1097,7 @@ void alter_venda(rpg *FRPG, hist_vend *vnd, int ct_v) { // [FUNÇÃO DE ALTERAR 
     scanf("%d", &vnd->val);
     limpa_buffer();
     barra("", "\n");
-    if (vnd->val <= 0 || vnd->val > 1000) {
-      printf("\n\033[38;5;196m[Valor inválido! Tente novamente...]\033[0m\n");
-    }
+    if (vnd->val <= 0 || vnd->val > 1000) printf("\n\033[38;5;196m[Valor inválido! Tente novamente...]\033[0m\n");
   } while (vnd->val <= 0 || vnd->val > 1000);
   printf("\n\033[38;5;220m[Venda alterada com sucesso!]\033[0m\n");
 }
@@ -1331,9 +1118,7 @@ int escolh_avent(rpg FRPG, int ct) { // [FUNÇÃO DE ESCOLHER AVENTUREIRO]
     scanf("%d", &posi);
     limpa_buffer();
     barra("", "\n");
-    if (posi < 0 || posi > ct) {
-      printf("\n\033[38;5;196m[Opção inválida! Tente novamente...]\033[0m\n");
-    }
+    if (posi < 0 || posi > ct) printf("\n\033[38;5;196m[Opção inválida! Tente novamente...]\033[0m\n");
   } while (posi < 0 || posi > ct);
   return --posi;
 }
@@ -1354,9 +1139,7 @@ int escolh_eqp(rpg FRPG, int ct) { // [FUNÇÃO DE ESCOLHER EQUIPAMENTO]
     scanf("%d", &posi);
     limpa_buffer();
     barra("", "\n");
-    if (posi < 0 || posi > ct) {
-      printf("\n\033[38;5;196m[Opção inválida! Tente novamente...]\033[0m\n");
-    }
+    if (posi < 0 || posi > ct) printf("\n\033[38;5;196m[Opção inválida! Tente novamente...]\033[0m\n");
   } while (posi < 0 || posi > ct);
   return --posi;
 }
@@ -1377,9 +1160,7 @@ int escolh_item(rpg FRPG, int ct) { // [FUNÇÃO DE ESCOLHER ITEM]
     scanf("%d", &posi);
     limpa_buffer();
     barra("", "\n");
-    if (posi < 0 || posi > ct) {
-      printf("\n\033[38;5;196m[Opção inválida! Tente novamente...]\033[0m\n");
-    }
+    if (posi < 0 || posi > ct) printf("\n\033[38;5;196m[Opção inválida! Tente novamente...]\033[0m\n");
   } while (posi < 0 || posi > ct);
   return --posi;
 }
@@ -1401,9 +1182,7 @@ int escolh_item_loja(rpg FRPG, int ct_l) { // [FUNÇÃO DE ESCOLHER ITENS]
     scanf("%d", &opcao);
     limpa_buffer();
     barra("", "\n");
-    if (opcao < 0 || opcao > ct_l) {
-      printf("\n\033[38;5;196m[Opção inválida! Tente novemente...]\033[0m\n");
-    } 
+    if (opcao < 0 || opcao > ct_l) printf("\n\033[38;5;196m[Opção inválida! Tente novamente...]\033[0m\n");
   } while (opcao < 0 || opcao > ct_l);
   return --opcao;
 }
@@ -1424,9 +1203,7 @@ int escolh_venda(rpg FRPG, int ct_v) { // [FUNÇÃO DE ESCOLHER VENDA]
     scanf("%d", &posi);
     limpa_buffer();
     barra("", "\n");
-    if (posi < 0 || posi > ct_v) {
-      printf("\n\033[38;5;196m[Opção inválida! Tente novamente...]\033[0m\n");
-    } 
+    if (posi < 0 || posi > ct_v) printf("\n\033[38;5;196m[Opção inválida! Tente novamente...]\033[0m\n");
   } while (posi < 0 || posi > ct_v);
   return --posi;
 }
@@ -1442,9 +1219,7 @@ int escolh_id_vend(rpg FRPG, int ct) { // [FUNÇÃO DE ESCOLHER ID DA COMPRA]
     scanf("%d", &temp);
     limpa_buffer();
     barra("", "\n");
-    if (!ver_id_vend(FRPG, temp, ct)) {
-      printf("\n\033[38;5;196m[ID inválido! Tente novamente...]\033[0m\n");
-    }
+    if (!ver_id_vend(FRPG, temp, ct)) printf("\n\033[38;5;196m[ID inválido! Tente novamente...]\033[0m\n");
   } while (!ver_id_vend(FRPG, temp, ct));
   return temp;
 }
@@ -1460,9 +1235,7 @@ void escolh_data_vend(data *dta) { // [FUNÇÃO DE ESCOLHER DATA DA VENDA]
     scanf("%d/%d/%d", &dta->dia, &dta->mes, &dta->ano);
     limpa_buffer();
     barra("", "\n");
-    if (!ver_data(dta->dia, dta->mes, dta->ano)) {
-      printf("\n\033[38;5;196m[Data inválida! Tente novemente...]\033[0m\n");
-    } 
+    if (!ver_data(dta->dia, dta->mes, dta->ano)) printf("\n\033[38;5;196m[Data inválida! Tente novamente...]\033[0m\n");
   } while (!ver_data(dta->dia, dta->mes, dta->ano));  
 }
 
@@ -1480,9 +1253,7 @@ int escolh_qtde(rpg FRPG, item ite) { // [FUNÇÃO DE ESCOLHER QUANTIDADE]
     scanf("%d", &opcao);
     limpa_buffer();
     barra("", "\n");
-    if (opcao < 0 || opcao > ite.qtd) {
-      printf("\n\033[38;5;196m[Quantidade inválida! Tente novamente...]\033[0m\n");
-    }
+    if (opcao < 0 || opcao > ite.qtd) printf("\n\033[38;5;196m[Quantidade inválida! Tente novamente...]\033[0m\n");
   } while (opcao < 0 || opcao > ite.qtd);
   return opcao;
 }
@@ -1501,9 +1272,7 @@ void excl_avent(rpg *FRPG, int *ct_a, int ct_v) { // [FUNÇÃO DE EXCLUIR AVENTU
           printf("\n\033[38;5;196m[Erro ao alocar memória!]\033[0m\n");
           exit(1);
         }
-        for (i = posi; i < *ct_a; i++) {
-          FRPG->avt[i] = FRPG->avt[i + 1];
-        } 
+        for (i = posi; i < *ct_a; i++) FRPG->avt[i] = FRPG->avt[i + 1];
         FRPG->avt = (avent *) realloc(FRPG->avt, (*ct_a) * sizeof(avent));
         if (!FRPG->avt) {
           printf("\n\033[38;5;196m[Erro ao alocar memória!]\033[0m\n");
@@ -1520,20 +1289,15 @@ void excl_avent(rpg *FRPG, int *ct_a, int ct_v) { // [FUNÇÃO DE EXCLUIR AVENTU
         FRPG->rubi += 5;
         printf("\n[\033[38;5;46m+05\033[38;5;196m[◊]\033[0m]\n");
         printf("\n\033[38;5;220m[Aventureiro excluído com sucesso!]\033[0m\n");
-      }
-        else {
-          printf("\n\033[38;5;196m[Exclusão cancelada!]\033[0m\n");
-        }
-    }
-      else {
-        printf("\n\033[38;5;196m[Impossível realizar a exclusão!]\033[0m");
-        printf("\n\033[38;5;196m[Aventureiro está equipado!]\033[0m\n");
-      }
-  }
-    else {
+      } else printf("\n\033[38;5;196m[Exclusão cancelada!]\033[0m\n");
+    } else {
       printf("\n\033[38;5;196m[Impossível realizar a exclusão!]\033[0m");
-      printf("\n\033[38;5;196m[Aventureiro está cadastrado em uma venda!]\033[0m\n");
+      printf("\n\033[38;5;196m[Aventureiro está equipado!]\033[0m\n");
     }
+  } else {
+    printf("\n\033[38;5;196m[Impossível realizar a exclusão!]\033[0m");
+    printf("\n\033[38;5;196m[Aventureiro está cadastrado em uma venda!]\033[0m\n");
+  }
 }
 
 void vend_eqp(rpg *FRPG, int *ct) { // [FUNÇÃO DE VENDER EQUIPAMENTO]
@@ -1548,9 +1312,7 @@ void vend_eqp(rpg *FRPG, int *ct) { // [FUNÇÃO DE VENDER EQUIPAMENTO]
       printf("\n\033[38;5;196m[Erro ao alocar memória!]\033[0m\n");
       exit(1);
     }
-    for (int i = temp; i < *ct; i++) {
-      FRPG->eqp[i] = FRPG->eqp[i + 1];
-    }
+    for (int i = temp; i < *ct; i++) FRPG->eqp[i] = FRPG->eqp[i + 1];
     (*ct)--;
     FRPG->eqp = (equip *) realloc(FRPG->eqp, (*ct) * sizeof(equip));
     if (!FRPG->eqp && *ct != 0) {
@@ -1560,10 +1322,7 @@ void vend_eqp(rpg *FRPG, int *ct) { // [FUNÇÃO DE VENDER EQUIPAMENTO]
     FRPG->ouro += 50;
     printf("\n[\033[38;5;46m+50\033[38;5;220m[¢]\033[0m]\n");
     printf("\n\033[38;5;220m[Equipamento vendido com sucesso!]\033[0m\n");
-  }
-    else {
-      printf("\n\033[38;5;196m[Venda cancelada!]\033[0m\n");
-    }
+  } else printf("\n\033[38;5;196m[Venda cancelada!]\033[0m\n");
 }
 
 void excl_item(rpg *FRPG, int posi, int *ct) { // [FUNÇÃO DE EXCLUIR ITEM]
@@ -1572,9 +1331,7 @@ void excl_item(rpg *FRPG, int posi, int *ct) { // [FUNÇÃO DE EXCLUIR ITEM]
     printf("\n\033[38;5;196m[Erro ao alocar memória!]\033[0m\n");
     exit(1);
   }
-  for (int i = posi; i < *ct; i++) {
-    FRPG->itm[i] = FRPG->itm[i + 1];
-  }
+  for (int i = posi; i < *ct; i++) FRPG->itm[i] = FRPG->itm[i + 1];
   FRPG->itm = (item *) realloc(FRPG->itm, (*ct) * sizeof(item));
   if (!FRPG->itm) {
     printf("\n\033[38;5;196m[Erro ao alocar memória!]\033[0m\n");
@@ -1596,9 +1353,7 @@ void excl_item_loja(rpg *FRPG, int posi, int *ct) { // [FUNÇÃO DE EXCLUIR ITEM
     printf("\n\033[38;5;196m[Erro ao alocar memória!]\033[0m\n");
     exit(1);
   }
-  for (int i = posi; i < *ct; i++) { 
-    FRPG->loja_itm[i] = FRPG->loja_itm[i + 1];
-  }
+  for (int i = posi; i < *ct; i++) FRPG->loja_itm[i] = FRPG->loja_itm[i + 1];
   FRPG->loja_itm = (item *) realloc(FRPG->loja_itm, (*ct) * sizeof(item));
   if (!FRPG->loja_itm) {
     printf("\n\033[38;5;196m[Erro ao alocar memória!]\033[0m\n");
@@ -1620,9 +1375,7 @@ void excl_venda(rpg *FRPG, int posi, int *ct) { // [FUNÇÃO DE EXCLUIR VENDA]
     printf("\n\033[38;5;196m[Erro ao alocar memória!]\033[0m\n");
     exit(1);
   }
-  for (int i = posi; i < *ct; i++) {
-    FRPG->vend[i] = FRPG->vend[i + 1]; 
-  }
+  for (int i = posi; i < *ct; i++) FRPG->vend[i] = FRPG->vend[i + 1]; 
   FRPG->vend = (hist_vend *) realloc(FRPG->vend, (*ct) * sizeof(hist_vend));
   if (!FRPG->vend) {
     printf("\n\033[38;5;196m[Erro ao alocar memória!]\033[0m\n");
@@ -1679,14 +1432,8 @@ void loja_item(rpg *FRPG, hist_vend *vnd, int *ct_i, int *ct_a, int *ct_v, int *
       (*ct_i)++; 
       printf("\n[\033[38;5;196m-%d\033[38;5;220m[¢]\033[0m]\n", FRPG->loja_itm[posi].val * qtde);
       printf("\n\033[38;5;220m[\033[38;5;208m+x%d \033[38;5;51m%s \033[38;5;220madquirido com sucesso!]\033[0m\n", qtde, FRPG->loja_itm[posi].nome);
-    }
-      else {
-        printf("\n\033[38;5;196m[Venda cancelada!]\033[0m\n");
-      }
-  }
-    else {
-      printf("\n\033[38;5;196m[Você não tem ouro suficiente!]\033[0m\n");
-    }
+    } else printf("\n\033[38;5;196m[Venda cancelada!]\033[0m\n");
+  } else printf("\n\033[38;5;196m[Você não tem ouro suficiente!]\033[0m\n");
 }
 
 void revend_item(rpg *FRPG, int *ct_i, int ct_v) { // [FUNÇÃO DE VENDER ITEM]
@@ -1706,15 +1453,11 @@ void revend_item(rpg *FRPG, int *ct_i, int ct_v) { // [FUNÇÃO DE VENDER ITEM]
       printf("\n\033[38;5;220m[\033[38;5;51m%s \033[38;5;220mvendido(a) com sucesso!]\033[0m\n", FRPG->itm[posi].nome);
       printf("\n[\033[38;5;46m+%d\033[38;5;220m[¢]\033[0m]\n", FRPG->itm[posi].val * qtd);
       excl_item(FRPG, posi, ct_i);
-    }
-      else {
-        printf("\n\033[38;5;196m[Venda cancelada!]\033[0m\n");
-      }
+    } else printf("\n\033[38;5;196m[Venda cancelada!]\033[0m\n");
+  } else {
+    printf("\n\033[38;5;196m[Impossível revender item!]\033[0m");
+    printf("\n\033[38;5;196m[O item está cadastrado em uma venda!]\033[0m\n");
   }
-    else {
-      printf("\n\033[38;5;196m[Impossível revender item!]\033[0m");
-      printf("\n\033[38;5;196m[O item está cadastrado em uma venda!]\033[0m\n");
-    }
 } 
 
 int escolh_deseqp(rpg *FRPG, avent avt) { // [FUNÇÃO DE ESCOLHER EQUIPAMENTO PARA DESEQUIPAR]
@@ -1735,13 +1478,9 @@ int escolh_deseqp(rpg *FRPG, avent avt) { // [FUNÇÃO DE ESCOLHER EQUIPAMENTO P
       scanf("%d", &posi);
       limpa_buffer();
       barra("", "\n");
-      if (posi < 0 || posi > aux) {
-        printf("\n\033[38;5;196m[Opção inválida! Tente novamente...]\033[0m\n");
-      }
+      if (posi < 0 || posi > aux) printf("\n\033[38;5;196m[Opção inválida! Tente novamente...]\033[0m\n");
     } while (posi < 0 || posi > aux);
-    if (avt.eqp[posi - 1].vid == 0) {
-      printf("\n\033[38;5;196m[Equipamento inexistente!]\033[0m\n");
-    }
+    if (avt.eqp[posi - 1].vid == 0) printf("\n\033[38;5;196m[Equipamento inexistente!]\033[0m\n");
   } while (avt.eqp[posi - 1].vid == 0);
   return --posi;
 }
@@ -1758,11 +1497,7 @@ void equip_avent(rpg *FRPG, int ct_a, int *ct_e) { // [FUNÇÃO DE EQUIPAR AVENT
     return;
   }
   int posi, i;
-  for (i = 0; FRPG->tipos[i] != NULL; i++) {
-    if (!strcmp(FRPG->eqp[aux].tipo, FRPG->tipos[i])) {
-      posi = i;
-    }
-  }
+  for (i = 0; FRPG->tipos[i] != NULL; i++) if (!strcmp(FRPG->eqp[aux].tipo, FRPG->tipos[i])) posi = i;
   if (sim_nao()) {
     equip temp = FRPG->avt[loc].eqp[posi];
     FRPG->avt[loc].eqp[posi] = FRPG->eqp[aux];
@@ -1773,9 +1508,7 @@ void equip_avent(rpg *FRPG, int ct_a, int *ct_e) { // [FUNÇÃO DE EQUIPAR AVENT
         printf("\n\033[38;5;196m[Erro ao alocar memória!]\033[0m\n");
         exit(1);
       }
-      for (i = aux; i < *ct_e; i++) {
-        FRPG->eqp[i] = FRPG->eqp[i + 1];
-      }
+      for (i = aux; i < *ct_e; i++) FRPG->eqp[i] = FRPG->eqp[i + 1];
       (*ct_e)--;
       FRPG->eqp = (equip *) realloc(FRPG->eqp, (*ct_e) * sizeof(equip));
       if (!FRPG->eqp && *ct_e != 0) {
@@ -1784,10 +1517,7 @@ void equip_avent(rpg *FRPG, int ct_a, int *ct_e) { // [FUNÇÃO DE EQUIPAR AVENT
       }
     }
     printf("\n\033[38;5;220m[Equipamento equipado com sucesso!]\033[0m\n");
-  }
-    else {
-      printf("\n\033[38;5;196m[Equipamento não equipado!]\033[0m\n");
-    }
+  } else printf("\n\033[38;5;196m[Equipamento não equipado!]\033[0m\n");
 }
 
 void desequip_avent(rpg *FRPG, int ct_a, int *ct_e) { // [FUNÇÃO DE DESEQUIPAR AVENTUREIRO]
@@ -1813,14 +1543,8 @@ void desequip_avent(rpg *FRPG, int ct_a, int *ct_e) { // [FUNÇÃO DE DESEQUIPAR
       FRPG->eqp[*ct_e] = temp;
       (*ct_e)++;
       printf("\n\033[38;5;220m[Equipamento desequipado com sucesso!]\033[0m\n");
-    }
-      else {
-        printf("\n\033[38;5;196m[Equipamento não desequipado!]\033[0m\n");
-      }
-  }
-    else {
-      printf("\n\033[38;5;196m[Aventureiro não possui equipamento!]\033[0m\n");
-    }
+    } else printf("\n\033[38;5;196m[Equipamento não desequipado!]\033[0m\n");
+  } else printf("\n\033[38;5;196m[Aventureiro não possui equipamento!]\033[0m\n");
 }
 
 void lvl_up_avent(avent *avt, int lvl_dif) { // [FUNÇÃO DE LVL UP]
@@ -1880,11 +1604,7 @@ void use_item(rpg *FRPG, int ct_a, int ct_e, int *ct_i) { // [FUNÇÃO DE USAR I
     return;
   }
   int i, loc, aux, qtd;
-  for (i = 0; FRPG->itens_aux[i] != NULL; i++) {
-    if (!strcmp(FRPG->itm[posi].tipo, FRPG->itens_aux[i])) {
-      loc = i;
-    }
-  }
+  for (i = 0; FRPG->itens_aux[i] != NULL; i++) if (!strcmp(FRPG->itm[posi].tipo, FRPG->itens_aux[i])) loc = i;
   if (loc == 0) {
     aux = escolh_eqp(*FRPG, ct_e);
     if (aux + 1 == 0) {
@@ -1898,82 +1618,60 @@ void use_item(rpg *FRPG, int ct_a, int ct_e, int *ct_i) { // [FUNÇÃO DE USAR I
       printf("\n\033[38;5;51m[\033[38;5;46m+%d XP\033[38;5;51m]\033[0m\n", qtd * FRPG->itm[posi].utl);
       lvl_up_epq(&FRPG->eqp[aux]);
       printf("\n\033[38;5;220m[Item usado com sucesso!]\033[0m\n");
+    } else printf("\n\033[38;5;196m[Item não usado!]\033[0m\n");
+  } else if (loc == 1) {
+    aux = escolh_avent(*FRPG, ct_a);
+    if (aux + 1 == 0) {
+      printf("\n\033[38;5;220m[Voltando...]\033[0m\n");    
+      return;
     }
-      else {
-        printf("\n\033[38;5;196m[Item não usado!]\033[0m\n");
-      }
-  }
-    else if (loc == 1) {
-      aux = escolh_avent(*FRPG, ct_a);
-      if (aux + 1 == 0) {
-        printf("\n\033[38;5;220m[Voltando...]\033[0m\n");    
-        return;
-      }
-      if (sim_nao()) {
-        qtd = escolh_qtde(*FRPG, FRPG->itm[posi]);
-        FRPG->avt[aux].vid += qtd * FRPG->itm[posi].utl;
-        FRPG->itm[posi].qtd -= qtd;
-        printf("\n\033[38;5;51m[\033[38;5;46m+%d VID\033[38;5;51m]\033[0m\n", qtd * FRPG->itm[posi].utl);
-        printf("\n\033[38;5;220m[Item usado com sucesso!]\033[0m\n");
-      }
-        else {
-          printf("\n\033[38;5;196m[Item não usado!]\033[0m\n");
-        }
+    if (sim_nao()) {
+      qtd = escolh_qtde(*FRPG, FRPG->itm[posi]);
+      FRPG->avt[aux].vid += qtd * FRPG->itm[posi].utl;
+      FRPG->itm[posi].qtd -= qtd;
+      printf("\n\033[38;5;51m[\033[38;5;46m+%d VID\033[38;5;51m]\033[0m\n", qtd * FRPG->itm[posi].utl);
+      printf("\n\033[38;5;220m[Item usado com sucesso!]\033[0m\n");
+    } else printf("\n\033[38;5;196m[Item não usado!]\033[0m\n");
+  } else if (loc == 2) {
+    aux = escolh_avent(*FRPG, ct_a);
+    if (aux + 1 == 0) {
+      printf("\n\033[38;5;220m[Voltando...]\033[0m\n");    
+      return;
     }
-      else if (loc == 2) {
-        aux = escolh_avent(*FRPG, ct_a);
-        if (aux + 1 == 0) {
-          printf("\n\033[38;5;220m[Voltando...]\033[0m\n");    
-          return;
-        }
-        if (sim_nao()) {
-          qtd = escolh_qtde(*FRPG, FRPG->itm[posi]);
-          FRPG->avt[aux].atq += qtd * FRPG->itm[posi].utl;
-          FRPG->itm[posi].qtd -= qtd;
-          printf("\n\033[38;5;51m[\033[38;5;46m+%d ATQ\033[38;5;51m]\033[0m\n", qtd * FRPG->itm[posi].utl);
-          printf("\n\033[38;5;220m[Item usado com sucesso!]\033[0m\n");
-        }
-          else {
-            printf("\n\033[38;5;196m[Item não usado!]\033[0m\n");
-          }
-      }
-        else if (loc == 3) {
-          aux = escolh_avent(*FRPG, ct_a);
-          if (aux + 1 == 0) {
-            printf("\n\033[38;5;220m[Voltando...]\033[0m\n");    
-            return;
-          }
-          if (sim_nao()) {
-            qtd = escolh_qtde(*FRPG, FRPG->itm[posi]);
-            FRPG->avt[aux].def += qtd * FRPG->itm[posi].utl;
-            FRPG->itm[posi].qtd -= qtd;      
-            printf("\n\033[38;5;51m[\033[38;5;46m+%d DEF\033[38;5;51m]\033[0m\n", qtd * FRPG->itm[posi].utl);
-          }
-            else {
-              printf("\n\033[38;5;196m[Item não usado!]\033[0m\n");
-            }
-          printf("\n\033[38;5;220m[Item usado com sucesso!]\033[0m\n");
-        }
-          else if (loc == 4) {
-            aux = escolh_avent(*FRPG, ct_a);
-            if (aux + 1 == 0) {
-              printf("\n\033[38;5;220m[Voltando...]\033[0m\n");    
-              return;
-            }
-            if (sim_nao()) {
-              qtd = escolh_qtde(*FRPG, FRPG->itm[posi]);
-              FRPG->avt[aux].vel += qtd * FRPG->itm[posi].utl;
-              FRPG->itm[posi].qtd -= qtd;
-              printf("\n\033[38;5;51m[\033[38;5;46m+%d VEL\033[38;5;51m]\033[0m\n", qtd * FRPG->itm[posi].utl);
-              printf("\n\033[38;5;220m[Item usado com sucesso!]\033[0m\n");
-            }
-              else {
-                printf("\n\033[38;5;196m[Item não usado!]\033[0m\n");
-              }
-          }
-            else {
-              printf("\n\033[38;5;196m[Nenhum aventureiro ou equipamento encontrados!]\033[0m\n");
-            }
+    if (sim_nao()) {
+      qtd = escolh_qtde(*FRPG, FRPG->itm[posi]);
+      FRPG->avt[aux].atq += qtd * FRPG->itm[posi].utl;
+      FRPG->itm[posi].qtd -= qtd;
+      printf("\n\033[38;5;51m[\033[38;5;46m+%d ATQ\033[38;5;51m]\033[0m\n", qtd * FRPG->itm[posi].utl);
+      printf("\n\033[38;5;220m[Item usado com sucesso!]\033[0m\n");
+    } else printf("\n\033[38;5;196m[Item não usado!]\033[0m\n");
+  } else if (loc == 3) {
+    aux = escolh_avent(*FRPG, ct_a);
+    if (aux + 1 == 0) {
+      printf("\n\033[38;5;220m[Voltando...]\033[0m\n");    
+      return;
+    }
+    if (sim_nao()) {
+      qtd = escolh_qtde(*FRPG, FRPG->itm[posi]);
+      FRPG->avt[aux].def += qtd * FRPG->itm[posi].utl;
+      FRPG->itm[posi].qtd -= qtd;      
+      printf("\n\033[38;5;51m[\033[38;5;46m+%d DEF\033[38;5;51m]\033[0m\n", qtd * FRPG->itm[posi].utl);
+    } else printf("\n\033[38;5;196m[Item não usado!]\033[0m\n");
+    printf("\n\033[38;5;220m[Item usado com sucesso!]\033[0m\n");
+  } else if (loc == 4) {
+    aux = escolh_avent(*FRPG, ct_a);
+    if (aux + 1 == 0) {
+      printf("\n\033[38;5;220m[Voltando...]\033[0m\n");    
+      return;
+    }
+    if (sim_nao()) {
+      qtd = escolh_qtde(*FRPG, FRPG->itm[posi]);
+      FRPG->avt[aux].vel += qtd * FRPG->itm[posi].utl;
+      FRPG->itm[posi].qtd -= qtd;
+      printf("\n\033[38;5;51m[\033[38;5;46m+%d VEL\033[38;5;51m]\033[0m\n", qtd * FRPG->itm[posi].utl);
+      printf("\n\033[38;5;220m[Item usado com sucesso!]\033[0m\n");
+    } else printf("\n\033[38;5;196m[Item não usado!]\033[0m\n");
+  } else printf("\n\033[38;5;196m[Nenhum aventureiro ou equipamento encontrados!]\033[0m\n");
 }
 
 int escolh_lvl_dif() { // [FUNÇÃO DE ESCOLHER NÍVEL DE DIFICULDADE]
@@ -1996,9 +1694,7 @@ int escolh_lvl_dif() { // [FUNÇÃO DE ESCOLHER NÍVEL DE DIFICULDADE]
     scanf("%d", &opcao);
     limpa_buffer();
     barra("", "\n");
-    if (opcao < 0 || opcao > 5) {
-      printf("\n\033[38;5;196m[Opção inválida! Tente novamente...]\033[0m\n");
-    }
+    if (opcao < 0 || opcao > 5) printf("\n\033[38;5;196m[Opção inválida! Tente novamente...]\033[0m\n");
   } while (opcao < 0 || opcao > 5);
   return --opcao;
 }
@@ -2007,20 +1703,14 @@ void exib_vid(int hp_atual, int hp_maximo) { // [FUNÇÃO DE EXIBIR BARRA DE VID
   int i, tam_barra = 20; 
   int qtd_simb = (hp_atual * tam_barra) / hp_maximo; 
   printf("HP: ");
-  for (i = 0; i < qtd_simb; i++) {
-    printf("\033[38;5;46m=\033[0m"); 
-  }
-  for (i = qtd_simb; i < tam_barra; i++) {
-    printf(" ");
-  }
+  for (i = 0; i < qtd_simb; i++) printf("\033[38;5;46m=\033[0m"); 
+  for (i = qtd_simb; i < tam_barra; i++) printf(" ");
   printf(" %d/%d\n", hp_atual, hp_maximo);
 }
 
 void exib_energia(float en_p) { // [FUNÇÃO DE EXIBIR ENERGIA]
   en_p *= 100;
-  if (en_p > 100) {
-    en_p = 100;
-  }
+  if (en_p > 100) en_p = 100;
   printf("⚡ \033[38;5;208m%.0f%%\033[0m\n", en_p);
 }
 
@@ -2033,12 +1723,8 @@ void calc_energ(avent avt, avent inmg, float *en_a, float *en_m) { // [FUNÇÃO 
 
 int calc_dano(int atq, int def, double dano_base) { // [FUNÇÃO DE CÁLCULO DE DANO]
   int dano = 0;
-  if (def > 0) {
-    dano = (1 + (atq / def)) * dano_base;
-  }
-    else {
-      dano = atq * dano_base;
-    }
+  if (def > 0) dano = (1 + (atq / def)) * dano_base;
+  else dano = atq * dano_base;
   return dano;
 }
 
@@ -2074,17 +1760,11 @@ int turn_avent(rpg FRPG, avent avt, avent inmg, int vid_a, int vid_m, int turn, 
       scanf("%d", &opcao);
       limpa_buffer();
       barra("", "\n");
-      if (opcao < 0 || opcao > aux) {
-        printf("\n\033[38;5;196m[Opção inválida! Tente novamente...]\033[0m\n");
-      }
+      if (opcao < 0 || opcao > aux) printf("\n\033[38;5;196m[Opção inválida! Tente novamente...]\033[0m\n");
     } while (opcao < 0 || opcao > aux);
     opcao--;
-    if (!strcmp(avt.hab[opcao].tipo, FRPG.habil_tipos[1])) {
-      printf("\n\033[38;5;196m[Não é possível atacar com essa habilidade!]\033[0m\n"); 
-    }      
-      else if (avt.hab[opcao].cooldown > 0) {
-        printf("\n\033[38;5;196m[Habilidade em cooldown!]\033[0m\n");
-      }
+    if (!strcmp(avt.hab[opcao].tipo, FRPG.habil_tipos[1])) printf("\n\033[38;5;196m[Não é possível atacar com essa habilidade!]\033[0m\n");    
+    else if (avt.hab[opcao].cooldown > 0) printf("\n\033[38;5;196m[Habilidade em cooldown!]\033[0m\n");
   } while (!strcmp(avt.hab[opcao].tipo, FRPG.habil_tipos[1]) || avt.hab[opcao].cooldown > 0);
   return opcao;
 }
@@ -2109,12 +1789,8 @@ int turn_inmg(rpg FRPG, avent inmg, avent avt, int vid_m, int vid_a, int turn, f
   barra("\n", "");
   list_hab_avent(FRPG, inmg);
   barra("\n", "\n");
-  if (inmg.hab[2].cooldown == 0 && strcmp(inmg.hab[2].tipo, FRPG.habil_tipos[1])) {
-    return 2;
-  }
-    else if (inmg.hab[1].cooldown == 0 && strcmp(inmg.hab[1].tipo, FRPG.habil_tipos[1])) {
-      return 1;
-    }
+  if (inmg.hab[2].cooldown == 0 && strcmp(inmg.hab[2].tipo, FRPG.habil_tipos[1])) return 2;
+  else if (inmg.hab[1].cooldown == 0 && strcmp(inmg.hab[1].tipo, FRPG.habil_tipos[1])) return 1;
   return 0;
 }
 
@@ -2124,63 +1800,42 @@ void efeit_habil(rpg FRPG, avent *avt, avent *inmg, habil hbl, int *vid_a, int *
       if (i == 0) {
         avt->atq += avt->atq * (atoi(FRPG.habil_mods[i]) / 100.0);
         printf("\n\033[38;5;51m[\033[38;5;46m%s\033[38;5;51m]\033[0m\n", FRPG.habil_mods[i]);
+      } else if (i == 1) {
+        inmg->atq += inmg->atq * (atoi(FRPG.habil_mods[i]) / 100.0);
+        printf("\n\033[38;5;51m[\033[38;5;46m%s\033[38;5;51m]\033[0m\n", FRPG.habil_mods[i]);
+      } else if (i == 2) {
+        avt->def += avt->def * (atoi(FRPG.habil_mods[i]) / 100.0);
+        printf("\n\033[38;5;51m[\033[38;5;46m%s\033[38;5;51m]\033[0m\n", FRPG.habil_mods[i]);
+      } else if (i == 3) {
+        inmg->def += inmg->def * (atoi(FRPG.habil_mods[i]) / 100.0);
+        printf("\n\033[38;5;51m[\033[38;5;46m%s\033[38;5;51m]\033[0m\n", FRPG.habil_mods[i]);
+      } else if (i == 4) {
+        avt->vel += avt->vel * (atoi(FRPG.habil_mods[i]) / 100.0);
+        printf("\n\033[38;5;51m[\033[38;5;46m%s\033[38;5;51m]\033[0m\n", FRPG.habil_mods[i]);
+      } else if (i == 5) {
+        inmg->vel += inmg->vel * (atoi(FRPG.habil_mods[i]) / 100.0);
+        printf("\n\033[38;5;51m[\033[38;5;46m%s\033[38;5;51m]\033[0m\n", FRPG.habil_mods[i]);
+      } else if (i == 6) {
+        *vid_a += *vid_a * (atoi(FRPG.habil_mods[i]) / 100.0);
+        if (*vid_a > avt->vid) *vid_a = avt->vid;
+        printf("\n\033[38;5;51m[\033[38;5;46m%s\033[38;5;51m]\033[0m\n", FRPG.habil_mods[i]);
+      } else if (i == 7) {
+        *vid_m += *vid_m * (atoi(FRPG.habil_mods[i]) / 100.0);
+        printf("\n\033[38;5;51m[\033[38;5;46m%s\033[38;5;51m]\033[0m\n", FRPG.habil_mods[i]);
+      } else if (i == 8) {
+        for (int j = 1; FRPG.habil_tipos[j] != NULL; j++) if (avt->hab[j].cooldown > 0) avt->hab[j].cooldown += atoi(FRPG.habil_mods[i]);  
+        printf("\n\033[38;5;51m[\033[38;5;46m%s\033[38;5;51m]\033[0m\n", FRPG.habil_mods[i]);
+      } else if (i == 9) {
+        for (int j = 1; FRPG.habil_tipos[j] != NULL; j++) inmg->hab[j].cooldown += atoi(FRPG.habil_mods[i]);
+        printf("\n\033[38;5;51m[\033[38;5;46m%s\033[38;5;51m]\033[0m\n", FRPG.habil_mods[i]);
+      } else if (i == 10) {
+        *en_a += atoi(FRPG.habil_mods[i]) / 100.0;
+        printf("\n\033[38;5;51m[\033[38;5;46m%s\033[38;5;51m]\033[0m\n", FRPG.habil_mods[i]);
+      } else if (i == 11) {
+        *en_m += atoi(FRPG.habil_mods[i]) / 100.0;
+        if (*en_m < 0) *en_m = 0;
+        printf("\n\033[38;5;51m[\033[38;5;46m%s\033[38;5;51m]\033[0m\n", FRPG.habil_mods[i]);
       }
-        else if (i == 1) {
-          inmg->atq += inmg->atq * (atoi(FRPG.habil_mods[i]) / 100.0);
-          printf("\n\033[38;5;51m[\033[38;5;46m%s\033[38;5;51m]\033[0m\n", FRPG.habil_mods[i]);
-        }
-          else if (i == 2) {
-            avt->def += avt->def * (atoi(FRPG.habil_mods[i]) / 100.0);
-            printf("\n\033[38;5;51m[\033[38;5;46m%s\033[38;5;51m]\033[0m\n", FRPG.habil_mods[i]);
-          }
-            else if (i == 3) {
-              inmg->def += inmg->def * (atoi(FRPG.habil_mods[i]) / 100.0);
-              printf("\n\033[38;5;51m[\033[38;5;46m%s\033[38;5;51m]\033[0m\n", FRPG.habil_mods[i]);
-            }
-              else if (i == 4) {
-                avt->vel += avt->vel * (atoi(FRPG.habil_mods[i]) / 100.0);
-                printf("\n\033[38;5;51m[\033[38;5;46m%s\033[38;5;51m]\033[0m\n", FRPG.habil_mods[i]);
-              }
-                else if (i == 5) {
-                  inmg->vel += inmg->vel * (atoi(FRPG.habil_mods[i]) / 100.0);
-                  printf("\n\033[38;5;51m[\033[38;5;46m%s\033[38;5;51m]\033[0m\n", FRPG.habil_mods[i]);
-                }
-                  else if (i == 6) {
-                    *vid_a += *vid_a * (atoi(FRPG.habil_mods[i]) / 100.0);
-                    if (*vid_a > avt->vid) {
-                      *vid_a = avt->vid;
-                    }
-                    printf("\n\033[38;5;51m[\033[38;5;46m%s\033[38;5;51m]\033[0m\n", FRPG.habil_mods[i]);
-                  }
-                    else if (i == 7) {
-                      *vid_m += *vid_m * (atoi(FRPG.habil_mods[i]) / 100.0);
-                      printf("\n\033[38;5;51m[\033[38;5;46m%s\033[38;5;51m]\033[0m\n", FRPG.habil_mods[i]);
-                    }
-                      else if (i == 8) {
-                        for (int j = 1; FRPG.habil_tipos[j] != NULL; j++) {
-                          if (avt->hab[j].cooldown > 0) {
-                            avt->hab[j].cooldown += atoi(FRPG.habil_mods[i]);  
-                          }
-                        }
-                        printf("\n\033[38;5;51m[\033[38;5;46m%s\033[38;5;51m]\033[0m\n", FRPG.habil_mods[i]);
-                      }
-                        else if (i == 9) {
-                          for (int j = 1; FRPG.habil_tipos[j] != NULL; j++) {
-                            inmg->hab[j].cooldown += atoi(FRPG.habil_mods[i]);
-                          }
-                          printf("\n\033[38;5;51m[\033[38;5;46m%s\033[38;5;51m]\033[0m\n", FRPG.habil_mods[i]);
-                        }
-                          else if (i == 10) {
-                            *en_a += atoi(FRPG.habil_mods[i]) / 100.0;
-                            printf("\n\033[38;5;51m[\033[38;5;46m%s\033[38;5;51m]\033[0m\n", FRPG.habil_mods[i]);
-                          }
-                            else if (i == 11) {
-                              *en_m += atoi(FRPG.habil_mods[i]) / 100.0;
-                              if (*en_m < 0) {
-                                *en_m = 0;
-                              }
-                              printf("\n\033[38;5;51m[\033[38;5;46m%s\033[38;5;51m]\033[0m\n", FRPG.habil_mods[i]);
-                            }
     }
   }
 }
@@ -2205,25 +1860,24 @@ void use_habil(rpg *FRPG, avent *avt, avent *inmg, habil *hbl, int *vid_a, int *
     barra("\n", "\n");
     printf("\033[38;5;220m[%s usou [\033[38;5;51m%s\033[38;5;220m]!]\033[0m", avt->nome, hbl->nome);
     barra("\n", "\n");
+  } else {
+    barra("\n", "\n");
+    centralizar("\033[38;5;46m[Turno: %d]\033[0m", turn);
+    barra("\n", "\n");   
+    barra("\n", "\n");
+    printf("\033[38;5;39m[%s][Lvl: %d]\033[0m\n", avt->nome, avt->lvl);
+    exib_energia(*en_a);
+    exib_vid(*vid_a, avt->vid);
+    barra("", "\n");
+    barra("\n", "\n");
+    printf("\033[38;5;196m[%s][Lvl: %d]\033[0m\n", inmg->nome, inmg->lvl);
+    exib_energia(*en_m);
+    exib_vid(*vid_m, inmg->vid);
+    barra("", "\n");
+    barra("\n", "\n");
+    printf("\033[38;5;220m[%s usou [\033[38;5;51m%s\033[38;5;220m]!]\033[0m", avt->nome, hbl->nome);
+    barra("\n", "\n");
   }
-    else {
-      barra("\n", "\n");
-      centralizar("\033[38;5;46m[Turno: %d]\033[0m", turn);
-      barra("\n", "\n");   
-      barra("\n", "\n");
-      printf("\033[38;5;39m[%s][Lvl: %d]\033[0m\n", avt->nome, avt->lvl);
-      exib_energia(*en_a);
-      exib_vid(*vid_a, avt->vid);
-      barra("", "\n");
-      barra("\n", "\n");
-      printf("\033[38;5;196m[%s][Lvl: %d]\033[0m\n", inmg->nome, inmg->lvl);
-      exib_energia(*en_m);
-      exib_vid(*vid_m, inmg->vid);
-      barra("", "\n");
-      barra("\n", "\n");
-      printf("\033[38;5;220m[%s usou [\033[38;5;51m%s\033[38;5;220m]!]\033[0m", avt->nome, hbl->nome);
-      barra("\n", "\n");
-    }
   *en_a = 0;
   efeit_habil(*FRPG, avt, inmg, *hbl, vid_a, vid_m, en_a, en_m);
   if (!strcmp(hbl->tipo, FRPG->habil_tipos[0])) {
@@ -2240,32 +1894,20 @@ void use_habil(rpg *FRPG, avent *avt, avent *inmg, habil *hbl, int *vid_a, int *
         barra("\n", "\n");
         printf("\033[38;5;220m[%s ativou a passiva \n[\033[38;5;51m%s\033[38;5;220m]!]\033[0m", avt->nome, avt->hab[i].nome);
         barra("\n", "\n");
-        if (!strcmp(avt->classe, "Monstro")) {
-          efeit_habil(*FRPG, avt, inmg, FRPG->inmg[esc].hab[1], vid_a, vid_m, en_a, en_m);
-        }
-          else {
-            efeit_habil(*FRPG, avt, inmg, FRPG->avt[esc].hab[1], vid_a, vid_m, en_a, en_m);
-          }
+        if (!strcmp(avt->classe, "Monstro")) efeit_habil(*FRPG, avt, inmg, FRPG->inmg[esc].hab[1], vid_a, vid_m, en_a, en_m);
+        else efeit_habil(*FRPG, avt, inmg, FRPG->avt[esc].hab[1], vid_a, vid_m, en_a, en_m);
         dano = calc_dano(avt->atq, inmg->def, hbl->mult);
         barra("\n", "\n");
         printf("\033[38;5;220m[%s causou [\033[38;5;196m%d\033[38;5;220m] de dano!]\033[0m", avt->nome, dano);
         barra("\n", "\n");
         *vid_m -= dano;
-        if (!strcmp(avt->classe, "Monstro")) {
-          avt->hab[i].cooldown = FRPG->inmg[esc].hab[i].cooldown;
-        }
-          else {
-            avt->hab[i].cooldown = FRPG->avt[esc].hab[i].cooldown;
-          }
+        if (!strcmp(avt->classe, "Monstro")) avt->hab[i].cooldown = FRPG->inmg[esc].hab[i].cooldown;
+        else avt->hab[i].cooldown = FRPG->avt[esc].hab[i].cooldown;
       }
     }
   }
-  if (!strcmp(avt->classe, "Monstro")) {
-    hbl->cooldown = FRPG->inmg[esc].hab[*esc_h].cooldown;
-  }
-    else {
-      hbl->cooldown = FRPG->avt[esc].hab[*esc_h].cooldown;
-    }
+  if (!strcmp(avt->classe, "Monstro")) hbl->cooldown = FRPG->inmg[esc].hab[*esc_h].cooldown;
+  else hbl->cooldown = FRPG->avt[esc].hab[*esc_h].cooldown;
   if (!strcmp(hbl->tipo, FRPG->habil_tipos[2])) {
     barra("\n", "\n");
     printf("\033[38;5;220m[%s ganhou [\033[38;5;51mTURNO EXTRA\033[38;5;220m]!]\033[0m", avt->nome);
@@ -2279,12 +1921,8 @@ void drop_item(rpg *FRPG, item *ite, int lvl_dif, int *ct) { // [FUNÇÃO DE ITE
   aux = sizeof_string(FRPG->itens_nome);
   strcpy(ite->nome, FRPG->itens_nome[rand() % aux]);
   strcpy(ite->tipo, FRPG->itens_aux[rand() % 5]);
-  if (strstr(ite->tipo, "Equipamento") != NULL) {
-    ite->utl = 1000 * (lvl_dif + 1);
-  }
-    else {
-      ite->utl = (lvl_dif + 1);
-    }
+  if (strstr(ite->tipo, "Equipamento") != NULL) ite->utl = 1000 * (lvl_dif + 1);
+  else ite->utl = (lvl_dif + 1);
   ite->ID = *ct + 1;
   barra("\n", "\n");
   centralizar("\033[38;5;220m[Você obteve um item!]\033[0m");
@@ -2329,51 +1967,41 @@ void aventura(rpg *FRPG, int ct_a, int *ct_e, int *ct_i) { // [FUNÇÃO DE AVENT
             centralizar("\033[38;5;196m[Você desistiu!]\033[0m");
             barra("\n", "\n");
             vida_a = 0;
+          } else {
+            printf("\n\033[38;5;196m[Você não desistiu!]\033[0m\n");
+            aux = -2;
           }
-            else {
-              printf("\n\033[38;5;196m[Você não desistiu!]\033[0m\n");
-              aux = -2;
-            }
-        }
-          else {
-            use_habil(FRPG, &btl_a, &btl_m, &btl_a.hab[aux], &vida_a, &vida_m, esc, &aux, turno, &energ_p, &energ_m);   
-          }       
+        } else use_habil(FRPG, &btl_a, &btl_m, &btl_a.hab[aux], &vida_a, &vida_m, esc, &aux, turno, &energ_p, &energ_m);       
+      } while (aux == -2);
+    } else if (energ_p < energ_m) { // [TURNO DO MONSTRO]
+      do {
+        aux = turn_inmg(*FRPG, btl_m, btl_a, vida_m, vida_a, turno, energ_p, energ_m);
+        use_habil(FRPG, &btl_m, &btl_a, &btl_m.hab[aux], &vida_m, &vida_a, lvl_dif, &aux, turno, &energ_m, &energ_p);
       } while (aux == -2);
     }
-      else if (energ_p < energ_m) { // [TURNO DO MONSTRO]
-        do {
-          aux = turn_inmg(*FRPG, btl_m, btl_a, vida_m, vida_a, turno, energ_p, energ_m);
-          use_habil(FRPG, &btl_m, &btl_a, &btl_m.hab[aux], &vida_m, &vida_a, lvl_dif, &aux, turno, &energ_m, &energ_p);
-        } while (aux == -2);
-      }
     turno++;
   }
-
   limpa_tela();
   if (vida_a <= 0 && vida_m <= 0) {
     barra("\n", "\n");
     centralizar("\033[38;5;201m[EMPATE!]\033[0m");
     barra("\n", "\n");
-  }
-    else if (vida_a <= 0) {
-      barra("\n", "\n");
-      centralizar("\033[38;5;196m[DERROTA!]\033[0m");
-      barra("\n", "\n");
+  } else if (vida_a <= 0) {
+    barra("\n", "\n");
+    centralizar("\033[38;5;196m[DERROTA!]\033[0m");
+    barra("\n", "\n");
+  } else if (vida_m <= 0) {
+    barra("\n", "\n");
+    centralizar("\033[38;5;201m[VITORIA!]\033[0m");
+    barra("\n", "\n");       
+    lvl_up_avent(&FRPG->avt[esc], lvl_dif);
+    FRPG->itm = (item *) realloc(FRPG->itm, (*ct_i + 1) * sizeof(item));
+    if (FRPG->itm != NULL) drop_item(FRPG, &FRPG->itm[*ct_i], lvl_dif, ct_i); 
+    else {
+      printf("\n\033[38;5;196m[Erro ao alocar memória!]\033[0m\n");
+      exit(1);
     }
-      else if (vida_m <= 0) {
-        barra("\n", "\n");
-        centralizar("\033[38;5;201m[VITORIA!]\033[0m");
-        barra("\n", "\n");       
-        lvl_up_avent(&FRPG->avt[esc], lvl_dif);
-        FRPG->itm = (item *) realloc(FRPG->itm, (*ct_i + 1) * sizeof(item));
-        if (FRPG->itm != NULL) {
-          drop_item(FRPG, &FRPG->itm[*ct_i], lvl_dif, ct_i); 
-        }
-          else {
-            printf("\n\033[38;5;196m[Erro ao alocar memória!]\033[0m\n");
-            exit(1);
-          }
-      }
+  }
 }
 
 int escolh_salvar() { // [FUNÇÃO DE ESCOLHA DO ARQUIVO P/ SALVAR]
@@ -2395,9 +2023,7 @@ int escolh_salvar() { // [FUNÇÃO DE ESCOLHA DO ARQUIVO P/ SALVAR]
     scanf("%d", &opcao);
     limpa_buffer();
     barra("", "\n");
-    if (opcao < 0 || opcao > 4) {
-      printf("\n\033[38;5;196m[Opção inválida!]\033[0m\n");
-    }
+    if (opcao < 0 || opcao > 4) printf("\n\033[38;5;196m[Opção inválida!]\033[0m\n");
   } while (opcao < 0 || opcao > 4);
   return opcao;
 }
@@ -2421,195 +2047,153 @@ int escolh_carregar() { // [FUNÇÃO DE ESCOLHA DO ARQUIVO P/ CARREGAR]
     scanf("%d", &opcao);
     limpa_buffer();
     barra("", "\n");
-    if (opcao < 0 || opcao > 4) {
-      printf("\n\033[38;5;196m[Opção inválida!]\033[0m\n");
-    }
+    if (opcao < 0 || opcao > 4) printf("\n\033[38;5;196m[Opção inválida!]\033[0m\n");
   } while (opcao < 0 || opcao > 4);
   return opcao;
 }
 
-void salvar_avent(char *arquivo, avent *avt, int ct) { // [FUNÇÃO P/ SALVAR OS AVENTUREIROS EXISTENTES]
-  FILE *file = fopen(arquivo, "wb");
-  if (file) {
-    fwrite(&ct, sizeof(int), 1, file);
-    for (int i = 0; i < ct; i++) {
-      fwrite(avt, sizeof(avent), 1, file);
-      avt++;
-    }
-    printf("\n\033[38;5;201m[Aventureiros salvos com sucesso!]\033[0m\n");
-    fclose(file);  
+void salvar_avent(char *nome_arqv, avent *avt, int ct) { // [FUNÇÃO P/ SALVAR OS AVENTUREIROS EXISTENTES]
+  FILE *arqv = fopen(nome_arqv, "wb");
+  if (arqv == NULL) {
+    printf("\n\033[38;5;196m[Erro ao abrir arquivo de aventureiros!]\033[0m\n");
+    exit(1);
   }
-    else {
-      printf("\n\033[38;5;196m[Erro ao abrir arquivo de aventureiros!]\033[0m\n");
-      exit(1);
-    }
-}
-
-void salvar_equip(char *arquivo, equip *eqt, int ct) { // [FUNÇÃO P/ SALVAR OS EQUIPAMENTOS EXISTENTES]
-  FILE *file = fopen(arquivo, "wb");
-  if (file) {
-    fwrite(&ct, sizeof(int), 1, file);
-    for (int i = 0; i < ct; i++) {
-      fwrite(eqt, sizeof(equip), 1, file);
-      eqt++;
-    }
-    printf("\n\033[38;5;201m[Equipamentos salvos com sucesso!]\033[0m\n");
-    fclose(file);
+  fwrite(&ct, sizeof(int), 1, arqv);
+  for (int i = 0; i < ct; i++) {
+    fwrite(avt, sizeof(avent), 1, arqv);
+    avt++;
   }
-    else {
-      printf("\n\033[38;5;196m[Erro ao abrir arquivo de equipamentos!]\033[0m\n");
-      exit(1);
-    }
+  printf("\n\033[38;5;201m[Aventureiros salvos com sucesso!]\033[0m\n");
+  fclose(arqv);  
 }
 
-void salvar_itens(char *arquivo, item *ite, int ct) { // [FUNÇÃO P/ SALVAR OS ITENS EXISTENTES]
-  FILE *file = fopen(arquivo, "wb");
-  if (file) {
-    fwrite(&ct, sizeof(int), 1, file);
-    for (int i = 0; i < ct; i++) {
-      fwrite(ite, sizeof(item), 1, file);
-      ite++;
-    }  
-    printf("\n\033[38;5;201m[Itens salvos com sucesso!]\033[0m\n");
-    fclose(file);    
-  } 
-    else {
-      printf("\n\033[38;5;196m[Erro ao abrir arquivo de itens!]\033[0m\n");
-      exit(1);
-    }
-}
-
-void salvar_vendas(char *arquivo, hist_vend *vnd, int ct) { // [FUNÇÃO P/ SALVAR AS VENDAS EXISTENTES]
-  FILE *file = fopen(arquivo, "wb");
-  if (file) {
-    fwrite(&ct, sizeof(int), 1, file);
-    for (int i = 0; i < ct; i++) {
-      fwrite(vnd, sizeof(hist_vend), 1, file);    
-      vnd++;
-    }
-    printf("\n\033[38;5;201m[Vendas salvas com sucesso!]\033[0m\n");
-    fclose(file);  
+void salvar_equip(char *nome_arqv, equip *eqt, int ct) { // [FUNÇÃO P/ SALVAR OS EQUIPAMENTOS EXISTENTES]
+  FILE *arqv = fopen(nome_arqv, "wb");
+  if (arqv == NULL) {
+    printf("\n\033[38;5;196m[Erro ao abrir arquivo de equipamentos!]\033[0m\n");
+    exit(1);
   }
-    else {
-      printf("\n\033[38;5;196m[Erro ao abrir arquivo de vendas!]\033[0m\n");
-      exit(1);
-    }
+  fwrite(&ct, sizeof(int), 1, arqv);
+  for (int i = 0; i < ct; i++) {
+    fwrite(eqt, sizeof(equip), 1, arqv);
+    eqt++;
+  }
+  printf("\n\033[38;5;201m[Equipamentos salvos com sucesso!]\033[0m\n");
+  fclose(arqv);
 }
 
-void carregar_avent(char *arquivo, rpg *FRPG, int *ct) { // [FUNÇÃO P/ CARREGAR OS AVENTUREIROS EXISTENTES]
-  FILE *file = fopen(arquivo, "rb");
-  if (file) {
-    int aux, i;
-    fread(&aux, sizeof(int), 1, file);
-    if (aux > 0) {
-      *ct = aux;
-      FRPG->avt = (avent *) realloc(FRPG->avt, *ct * sizeof(avent));
-      if (!FRPG->avt) {
-        printf("\n\033[38;5;196m[Erro ao alocar memória!]\033[0m\n");
-        exit(1);
-      }
-      for (i = 0; i < *ct; i++) {
-        fread(&(FRPG->avt[i]), sizeof(avent), 1, file);
-      }
-      printf("\n\033[38;5;201m[Aventureiros carregados com sucesso!]\033[0m\n"); 
-    }
-      else {
-        printf("\n\033[38;5;196m[Não há aventureiros salvos!]\033[0m\n");
-      }
-    rewind(file);
-    fclose(file);
-  } 
-    else {
-      printf("\n\033[38;5;196m[Erro ao abrir arquivo de aventureiros!]\033[0m\n");
-      exit(1);
-    }
+void salvar_itens(char *nome_arqv, item *ite, int ct) { // [FUNÇÃO P/ SALVAR OS ITENS EXISTENTES]
+  FILE *arqv = fopen(nome_arqv, "wb");
+  if (arqv == NULL) {
+    printf("\n\033[38;5;196m[Erro ao abrir arquivo de itens!]\033[0m\n");
+    exit(1);
+  }
+  fwrite(&ct, sizeof(int), 1, arqv);
+  for (int i = 0; i < ct; i++) {
+    fwrite(ite, sizeof(item), 1, arqv);
+    ite++;
+  }  
+  printf("\n\033[38;5;201m[Itens salvos com sucesso!]\033[0m\n");
+  fclose(arqv);    
 }
 
-void carregar_equip(char *arquivo, rpg *FRPG, int *ct) { // [FUNÇÃO P/ CARREGAR OS EQUIPAMENTOS EXISTENTES]
-  FILE *file = fopen(arquivo, "rb");
-  if (file) {
-    int aux, i;
-    fread(&aux, sizeof(int), 1, file);
-    if (aux > 0) {
-      *ct = aux;
-      FRPG->eqp = (equip *) realloc(FRPG->eqp, *ct * sizeof(equip));
-      if (!FRPG->eqp) {
-        printf("\n\033[38;5;196m[Erro ao alocar memória!]\033[0m\n");
-        exit(1);
-      }
-      for (i = 0; i < *ct; i++) {
-        fread(&(FRPG->eqp[i]), sizeof(equip), 1, file);
-      }
-      printf("\n\033[38;5;201m[Equipamentos carregados com sucesso!]\033[0m\n");
-    }
-      else {
-        printf("\n\033[38;5;196m[Não há equipamentos salvos!]\033[0m\n");
-      }
-    rewind(file);
-    fclose(file);
-  } 
-    else {
-      printf("\n\033[38;5;196m[Erro ao abrir arquivo de equipamentos!]\033[0m\n");
-      exit(1);
-    }
+void salvar_vendas(char *nome_arqv, hist_vend *vnd, int ct) { // [FUNÇÃO P/ SALVAR AS VENDAS EXISTENTES]
+  FILE *arqv = fopen(nome_arqv, "wb");
+  if (arqv == NULL) {
+    printf("\n\033[38;5;196m[Erro ao abrir arquivo de vendas!]\033[0m\n");
+    exit(1);
+  }
+  fwrite(&ct, sizeof(int), 1, arqv);
+  for (int i = 0; i < ct; i++) {
+    fwrite(vnd, sizeof(hist_vend), 1, arqv);    
+    vnd++;
+  }
+  printf("\n\033[38;5;201m[Vendas salvas com sucesso!]\033[0m\n");
+  fclose(arqv);  
 }
 
-void carregar_itens(char *arquivo, rpg *FRPG, int *ct) { // [FUNÇÃO P/ CARREGAR OS ITENS EXISTENTES]
-  FILE *file = fopen(arquivo, "rb");
-  if (file) {
-    int aux, i;
-    fread(&aux, sizeof(int), 1, file);
-    if (aux > 0) {
-      *ct = aux;
-      FRPG->loja_itm = (item *) realloc(FRPG->loja_itm, *ct * sizeof(item));
-      if (!FRPG->loja_itm) {
-        printf("\n\033[38;5;196m[Erro ao alocar memória!]\033[0m\n");
-        exit(1);        
-      }
-      for (i = 0; i < *ct; i++) {
-        fread(&(FRPG->loja_itm[i]), sizeof(item), 1, file);
-      }
-      printf("\n\033[38;5;201m[Itens carregados com sucesso!]\033[0m\n");
-    }
-      else {
-        printf("\n\033[38;5;196m[Não há itens salvos!]\033[0m\n");
-      }
-    rewind(file);
-    fclose(file);
-  } 
-    else {
-      printf("\n\033[38;5;196m[Erro ao abrir arquivo de itens!]\033[0m\n");
+void carregar_avent(char *nome_arqv, rpg *FRPG, int *ct) { // [FUNÇÃO P/ CARREGAR OS AVENTUREIROS EXISTENTES]
+  FILE *arqv = fopen(nome_arqv, "rb");
+  if (arqv == NULL) {
+    printf("\n\033[38;5;196m[Erro ao abrir arquivo de aventureiros!]\033[0m\n");
+    exit(1);
+  }
+  int aux, i;
+  fread(&aux, sizeof(int), 1, arqv);
+  if (aux > 0) {
+    *ct = aux;
+    FRPG->avt = (avent *)realloc(FRPG->avt, *ct * sizeof(avent));
+    if (!FRPG->avt) {
+      printf("\n\033[38;5;196m[Erro ao alocar memória!]\033[0m\n");
       exit(1);
     }
+    for (i = 0; i < *ct; i++) fread(&(FRPG->avt[i]), sizeof(avent), 1, arqv);
+    printf("\n\033[38;5;201m[Aventureiros carregados com sucesso!]\033[0m\n"); 
+  } else printf("\n\033[38;5;196m[Não há aventureiros salvos!]\033[0m\n");
+  fclose(arqv);
 }
 
-void carregar_vendas(char *arquivo, rpg *FRPG, int *ct) { // [FUNÇÃO P/ CARREGAR AS VENDAS EXISTENTES]
-  FILE *file = fopen(arquivo, "rb");
-  if (file) {
-    int aux, i;
-    fread(&aux, sizeof(int), 1, file);
-    if (aux > 0) {
-      *ct = aux;
-      FRPG->vend = (hist_vend *) realloc(FRPG->vend, *ct * sizeof(hist_vend));
-      if (!FRPG->vend) {
-        printf("\n\033[38;5;196m[Erro ao alocar memória!]\033[0m\n");
-        exit(1);                  
-      }
-      for (i = 0; i < *ct; i++) {
-        fread(&(FRPG->vend[i]), sizeof(hist_vend), 1, file);
-      }
-      printf("\n\033[38;5;201m[Vendas carregadas com sucesso!]\033[0m\n");
-    }
-      else {
-        printf("\n\033[38;5;196m[Não há vendas salvas!]\033[0m\n");
-      }
-    rewind(file);
-    fclose(file);
-  } 
-    else {
-      printf("\n\033[38;5;196m[Erro ao abrir arquivo de vendas!]\033[0m\n");
+void carregar_equip(char *nome_arqv, rpg *FRPG, int *ct) { // [FUNÇÃO P/ CARREGAR OS EQUIPAMENTOS EXISTENTES]
+  FILE *arqv = fopen(nome_arqv, "rb");
+  if (arqv == NULL) {
+    printf("\n\033[38;5;196m[Erro ao abrir arquivo de equipamentos!]\033[0m\n");
+    exit(1);
+  }
+  int aux, i;
+  fread(&aux, sizeof(int), 1, arqv);
+  if (aux > 0) {
+    *ct = aux;
+    FRPG->eqp = (equip *) realloc(FRPG->eqp, *ct * sizeof(equip));
+    if (!FRPG->eqp) {
+      printf("\n\033[38;5;196m[Erro ao alocar memória!]\033[0m\n");
       exit(1);
     }
+    for (i = 0; i < *ct; i++) fread(&(FRPG->eqp[i]), sizeof(equip), 1, arqv);
+    printf("\n\033[38;5;201m[Equipamentos carregados com sucesso!]\033[0m\n");
+  } else printf("\n\033[38;5;196m[Não há equipamentos salvos!]\033[0m\n");
+  fclose(arqv);
+}
+
+void carregar_itens(char *nome_arqv, rpg *FRPG, int *ct) { // [FUNÇÃO P/ CARREGAR OS ITENS EXISTENTES]
+  FILE *arqv = fopen(nome_arqv, "rb");
+  if (arqv == NULL) {
+    printf("\n\033[38;5;196m[Erro ao abrir arquivo de itens!]\033[0m\n");
+    exit(1);
+  }
+  int aux, i;
+  fread(&aux, sizeof(int), 1, arqv);
+  if (aux > 0) {
+    *ct = aux;
+    FRPG->loja_itm = (item *) realloc(FRPG->loja_itm, *ct * sizeof(item));
+    if (!FRPG->loja_itm) {
+      printf("\n\033[38;5;196m[Erro ao alocar memória!]\033[0m\n");
+      exit(1);        
+    }
+    for (i = 0; i < *ct; i++) fread(&(FRPG->loja_itm[i]), sizeof(item), 1, arqv);
+    printf("\n\033[38;5;201m[Itens carregados com sucesso!]\033[0m\n");
+  } else printf("\n\033[38;5;196m[Não há itens salvos!]\033[0m\n");
+  fclose(arqv);
+}
+
+void carregar_vendas(char *nome_arqv, rpg *FRPG, int *ct) { // [FUNÇÃO P/ CARREGAR AS VENDAS EXISTENTES]
+  FILE *arqv = fopen(nome_arqv, "rb");
+  if (arqv == NULL) {
+    printf("\n\033[38;5;196m[Erro ao abrir arquivo de vendas!]\033[0m\n");
+    exit(1);
+  }
+  int aux, i;
+  fread(&aux, sizeof(int), 1, arqv);
+  if (aux > 0) {
+    *ct = aux;
+    FRPG->vend = (hist_vend *) realloc(FRPG->vend, *ct * sizeof(hist_vend));
+    if (!FRPG->vend) {
+      printf("\n\033[38;5;196m[Erro ao alocar memória!]\033[0m\n");
+      exit(1);                  
+    }
+    for (i = 0; i < *ct; i++) fread(&(FRPG->vend[i]), sizeof(hist_vend), 1, arqv);
+    printf("\n\033[38;5;201m[Vendas carregadas com sucesso!]\033[0m\n");
+  } else printf("\n\033[38;5;196m[Não há vendas salvas!]\033[0m\n");
+  fclose(arqv);
 }
 
 void iniciar_rpg(rpg *FRPG, int *ct_a, int *ct_e, int *ct_i, int *ct_l) { // [FUNÇÃO DE INICIAR RPG]
@@ -2638,7 +2222,6 @@ void iniciar_rpg(rpg *FRPG, int *ct_a, int *ct_e, int *ct_i, int *ct_l) { // [FU
   FRPG->classes[4] = "Ladino";
   FRPG->classes[5] = "Mago";
   FRPG->classes[6] = NULL;
-
   FRPG->itens_aux = (char **) realloc(FRPG->itens_aux, 6 * sizeof(char *));
   if (!FRPG->itens_aux) {
     printf("\n\033[38;5;196m[Erro ao alocar memória!]\033[0m\n");
@@ -2650,7 +2233,6 @@ void iniciar_rpg(rpg *FRPG, int *ct_a, int *ct_e, int *ct_i, int *ct_l) { // [FU
   FRPG->itens_aux[3] = "Elixir da Defesa";
   FRPG->itens_aux[4] = "Elixir da Velocidade";
   FRPG->itens_aux[5] = NULL;
-
   FRPG->itens_nome = (char **) realloc(FRPG->itens_nome, 10 * sizeof(char *));
   if (!FRPG->itens_nome) {
     printf("\n\033[38;5;196m[Erro ao alocar memória!]\033[0m\n");
@@ -2666,7 +2248,6 @@ void iniciar_rpg(rpg *FRPG, int *ct_a, int *ct_e, int *ct_i, int *ct_l) { // [FU
   FRPG->itens_nome[7] = "Poção da Clareza Mental";
   FRPG->itens_nome[8] = "Elixir da Agilidade Graciosa";
   FRPG->itens_nome[9] = NULL;    
-
   FRPG->habil_nomes = (char **) realloc(FRPG->habil_nomes, 16 * sizeof(char *));
   if (!FRPG->habil_nomes) {
     printf("\n\033[38;5;196m[Erro ao alocar memória!]\033[0m\n");
@@ -2688,7 +2269,6 @@ void iniciar_rpg(rpg *FRPG, int *ct_a, int *ct_e, int *ct_i, int *ct_l) { // [FU
   FRPG->habil_nomes[13] = "Luz Purificadora";
   FRPG->habil_nomes[14] = "Estilhaço Estelar";
   FRPG->habil_nomes[15] = NULL;
-
   FRPG->habil_tipos = (char **) realloc(FRPG->habil_tipos, 4 * sizeof(char *));
   if (!FRPG->habil_tipos) {
     printf("\n\033[38;5;196m[Erro ao alocar memória!]\033[0m\n");
@@ -2698,7 +2278,6 @@ void iniciar_rpg(rpg *FRPG, int *ct_a, int *ct_e, int *ct_i, int *ct_l) { // [FU
   FRPG->habil_tipos[1] = "Passiva";
   FRPG->habil_tipos[2] = "Especial";
   FRPG->habil_tipos[3] = NULL;
-
   FRPG->habil_mods = (char **) realloc(FRPG->habil_mods, 13 * sizeof(char *));
   if (!FRPG->habil_mods) {
     printf("\n\033[38;5;196m[Erro ao alocar memória!]\033[0m\n");
@@ -2717,7 +2296,6 @@ void iniciar_rpg(rpg *FRPG, int *ct_a, int *ct_e, int *ct_i, int *ct_l) { // [FU
   FRPG->habil_mods[10] = "+20% ENERG";
   FRPG->habil_mods[11] = "-20% ENERG";
   FRPG->habil_mods[12] = NULL;
-
   FRPG->inmg = (avent *) realloc(FRPG->inmg, 5 * sizeof(avent));
   if (!FRPG->inmg) {
     printf("\n\033[38;5;196m[Erro ao alocar memória!]\033[0m\n");
@@ -2727,27 +2305,22 @@ void iniciar_rpg(rpg *FRPG, int *ct_a, int *ct_e, int *ct_i, int *ct_l) { // [FU
   FRPG->inmg[0].hab[0] = (habil) {1, "Ataque Rápido", "Ativa", "[+35% ATK]", 0, 1.15};
   FRPG->inmg[0].hab[1] = (habil) {2, "Investida Brutal", "Passiva", "[-1 CDWN]\n[+20% ENERG]", 2, 1.21};
   FRPG->inmg[0].hab[2] = (habil) {3, "Flecha Envenenada", "Especial", "[-10% VID]\n[-20% ENERG]\n[-25% DEF]", 3, 1.23};
-
   FRPG->inmg[1] = (avent) {2, "Orc", "Monstro", "666", 20, 20, 20, 20, 15, 0};
   FRPG->inmg[1].hab[0] = (habil) {4, "Ataque Poderoso", "Ativa", "[-1 CDWN]", 0, 1.31};
   FRPG->inmg[1].hab[1] = (habil) {5, "Intuição", "Passiva", "[+35% ATK]\n[+20% ENERG]\n[-25% DEF]", 3, 1.42};
   FRPG->inmg[1].hab[2] = (habil) {6, "Punição", "Ativa", "[-10% VID]\n[-20% ENERG]\n[-35% ATK]", 3, 1.45};
-
   FRPG->inmg[2] = (avent) {3, "Golen", "Monstro", "666", 30, 30, 30, 30, 25, 0};
   FRPG->inmg[2].hab[0] = (habil) {7, "Golpe Pesado", "Ativa", "[-25% DEF]", 0, 1.51};
   FRPG->inmg[2].hab[1] = (habil) {8, "Ataque Esmagador", "Ativa", "[-10% VID]\n[-20% ENERG]\n[-25% DEF]", 3, 1.61};
   FRPG->inmg[2].hab[2] = (habil) {9, "Núcleo de Mana", "Especial", "[+20% ENERG]\n[-10% VID]\n[-25% DEF]", 3, 1.62};
-
   FRPG->inmg[3] = (avent) {4, "Lich", "Monstro", "666", 40, 40, 40, 40, 35, 0};
   FRPG->inmg[3].hab[0] = (habil) {10, "Ataque Relâmpago", "Ativa", "[-20% ENERG]", 0, 1.71};
   FRPG->inmg[3].hab[1] = (habil) {11, "Poder das Almas", "Passiva", "[+35% ATK]\n[+20% ENERG]\n[-25% DEF]", 3, 1.81};
   FRPG->inmg[3].hab[2] = (habil) {12, "Poder da Morte", "Especial", "[-10% VID]\n[-20% ENERG]\n[-35% ATK]", 3, 1.82};
-
   FRPG->inmg[4] = (avent) {5, "Dragão", "Monstro","666", 50, 50, 50, 50, 45, 0};
   FRPG->inmg[4].hab[0] = (habil) {13, "Garras de Diamante", "Ativa", "[-25% DEF]", 0, 1.91};
   FRPG->inmg[4].hab[1] = (habil) {14, "Poder Ancestral", "Passiva", "[+35% ATK]\n[+20% ENERG]\n[+15% VEL]", 3, 2.01};
   FRPG->inmg[4].hab[2] = (habil) {15, "Sopro Divino", "Ativa", "[-10% VID]\n[-20% ENERG]\n[-35% ATK]", 3, 2.11};
-
   FRPG->itm = (item *) realloc(FRPG->itm, 5 * sizeof(item));
   if (!FRPG->itm) {
     printf("\n\033[38;5;196m[Erro ao alocar memória!]\033[0m\n");
@@ -2758,7 +2331,6 @@ void iniciar_rpg(rpg *FRPG, int *ct_a, int *ct_e, int *ct_i, int *ct_l) { // [FU
   FRPG->itm[2] = (item) {3, "Pena de Fênix", "Elixir da Vida", 4, 5, 100};
   FRPG->itm[3] = (item) {4, "Estatua da Deusa", "Elixir da Defesa", 1, 5, 100};
   FRPG->itm[4] = (item) {5, "Mercurio", "Elixir da Velocidade", 2, 5, 100};
-
   FRPG->loja_itm = (item *) realloc(FRPG->loja_itm, 5 * sizeof(item));
   if (!FRPG->loja_itm) {
     printf("\n\033[38;5;196m[Erro ao alocar memória!]\033[0m\n");
@@ -2770,7 +2342,6 @@ void iniciar_rpg(rpg *FRPG, int *ct_a, int *ct_e, int *ct_i, int *ct_l) { // [FU
   FRPG->loja_itm[3] = (item) {44, "Poção de Defesa", "Elixir da Defesa", 11, 5, 100};
   FRPG->loja_itm[4] = (item) {55, "Poção de Velocidade", "Elixir da Velocidade", 3, 5, 100};
   *ct_l += 5;
-
   FRPG->ouro = 50000;
   FRPG->rubi = 5000;
   FRPG->avt[0] = (avent) {1, "Alen", "Guerreiro", "031666", 50, 50, 50, 50, 25, 0, 23, 04, 1084, "Angélicas", "Montsdt", "Fitoa", 41};
@@ -2805,9 +2376,7 @@ int escolh_menu(rpg FRPG) { // [FUNÇÃO DE MENU PRINCIPAL]
     scanf("%d", &op);
     limpa_buffer();
     barra("", "\n");
-    if (op < 0 || op > 6) {
-      printf("\n\033[38;5;196m[Opção inválida! Tente novamente...]\033[0m\n");
-    }
+    if (op < 0 || op > 6) printf("\n\033[38;5;196m[Opção inválida! Tente novamente...]\033[0m\n");
   } while (op < 0 || op > 6);
   return op;
 }
@@ -2834,9 +2403,7 @@ int escolh_menu_avent(rpg FRPG) { // [FUNÇÃO DE ESCOLHA DO MENU AVENTUREIRO]
     scanf("%d", &op);
     limpa_buffer();
     barra("", "\n");
-    if (op < 0 || op > 6) {
-      printf("\n\033[38;5;196m[Opção inválida! Tente novamente...]\033[0m\n");
-    }
+    if (op < 0 || op > 6) printf("\n\033[38;5;196m[Opção inválida! Tente novamente...]\033[0m\n");
   } while (op < 0 || op > 6);
   return op;
 }
@@ -2861,9 +2428,7 @@ int escolh_menu_eqp(rpg FRPG) { // [FUNÇÃO DE ESCOLHA DO MENU EQUIPAMENTO]
     scanf("%d", &op);
     limpa_buffer();
     barra("", "\n");
-    if (op < 0 || op > 4) {
-      printf("\n\033[38;5;196m[Opção inválida! Tente novamente...]\033[0m\n");
-    }
+    if (op < 0 || op > 4) printf("\n\033[38;5;196m[Opção inválida! Tente novamente...]\033[0m\n");
   } while (op < 0 || op > 4);
   return op;
 }
@@ -2894,9 +2459,7 @@ int escolh_menu_loja(rpg FRPG) { // [FUNÇÃO DE ESCOLHA DO MENU LOJA]
     scanf("%d", &op);
     limpa_buffer();
     barra("", "\n");
-    if (op < 0 || op > 10) {
-      printf("\n\033[38;5;196m[Opção inválida! Tente novamente...]\033[0m\n");
-    }
+    if (op < 0 || op > 10) printf("\n\033[38;5;196m[Opção inválida! Tente novamente...]\033[0m\n");
   } while (op < 0 || op > 10);
   return op;
 }
@@ -2920,9 +2483,7 @@ int escolh_menu_itens(rpg FRPG) { // [FUNÇÃO DE ESCOLHA DO MENU INVENTÁRIO]
     scanf("%d", &op);
     limpa_buffer();
     barra("", "\n");
-    if (op < 0 || op > 3) {
-      printf("\n\033[38;5;196m[Opção inválida! Tente novamente...]\033[0m\n");
-    }
+    if (op < 0 || op > 3) printf("\n\033[38;5;196m[Opção inválida! Tente novamente...]\033[0m\n");
   } while (op < 0 || op > 3);
   return op;
 }
@@ -2935,96 +2496,46 @@ void menu_avent(rpg *FRPG, int *ct_a, int *ct_e, int *ct_i, int *ct_v, int *ct_l
       if (sim_nao()) {
         loop_ext = 0;
         printf("\n\033[38;5;220m[Voltando...]\033[0m\n"); 
-      }
-        else {
-          printf("\n\033[38;5;196m[Cancelado!]\033[0m\n");
-        }
+      } else printf("\n\033[38;5;196m[Cancelado!]\033[0m\n");
+    } else if (opcao == 1) { // [REGISTRAR AVENTUREIRO]
+      if (*ct_a < 100) {
+        if (FRPG->rubi >= 10) {
+          if (sim_nao()) {
+            FRPG->avt = (avent *) realloc(FRPG->avt, (*ct_a + 1) * sizeof(avent));
+            if (FRPG->avt) regist_avent(FRPG, &FRPG->avt[*ct_a], ct_a);
+            else {
+              printf("\n\033[38;5;196m[Erro ao realocar memória!]\033[0m\n");
+              exit(1);
+            }
+          } else printf("\n\033[38;5;220m[Voltando...]\033[0m\n");
+        } else printf("\n\033[38;5;196m[Rubis insuficientes!]\033[0m\n");
+      } else printf("\n\033[38;5;196m[Limite de aventureiros atingido!]\033[0m\n");
+    } else if (opcao == 2) { // [ALTERAR AVENTUREIRO]
+      if (FRPG->rubi >= 5) {
+        if (*ct_a > 0) {
+          aux = escolh_avent(*FRPG, *ct_a);
+          if (aux + 1 == 0) printf("\n\033[38;5;220m[Voltando...]\033[0m\n");    
+          else if (sim_nao()) alter_avent(FRPG, &FRPG->avt[aux], *ct_a);
+          else printf("\n\033[38;5;220m[Voltando...]\033[0m\n");             
+        } else printf("\n\033[38;5;196m[Não há aventureiros registrados!]\033[0m\n");
+      } else printf("\n\033[38;5;196m[Rubis insuficientes!]\033[0m\n");
+    } else if (opcao == 3) { // [MOSTRAR AVENTUREIROS]
+      if (*ct_a > 0) {
+        limpa_tela();
+        list_avent(FRPG, *ct_a);
+      } else printf("\n\033[38;5;196m[Nenhum aventureiro encontrado!]\033[0m\n");
+    } else if (opcao == 4) { // [EXCLUIR AVENTUREIRO]
+      if (*ct_a > 0) excl_avent(FRPG, ct_a, *ct_v);
+      else printf("\n\033[38;5;196m[Nenhum aventureiro encontrado!]\033[0m\n");
+    } else if (opcao == 5) { // [EQUIPAR AVENTUREIRO]
+      if (*ct_a > 0) {
+        if (*ct_e > 0) equip_avent(FRPG, *ct_a, ct_e);
+        else printf("\n\033[38;5;196m[Nenhum equipamento encontrado!]\033[0m\n");
+      } else printf("\n\033[38;5;196m[Nenhum aventureiro encontrado!]\033[0m\n");
+    } else if (opcao == 6) { // [DESEQUIPAR AVENTUREIRO]
+      if (*ct_a > 0) desequip_avent(FRPG, *ct_a, ct_e);
+      else printf("\n\033[38;5;196m[Nenhum aventureiro encontrado!]\033[0m\n");
     }
-      else if (opcao == 1) { // [REGISTRAR AVENTUREIRO]
-        if (*ct_a < 100) {
-          if (FRPG->rubi >= 10) {
-            if (sim_nao()) {
-              FRPG->avt = (avent *) realloc(FRPG->avt, (*ct_a + 1) * sizeof(avent));
-              if (FRPG->avt) {
-                regist_avent(FRPG, &FRPG->avt[*ct_a], ct_a);
-              } 
-                else {
-                  printf("\n\033[38;5;196m[Erro ao realocar memória!]\033[0m\n");
-                  exit(1);
-                }
-            }
-              else {
-                printf("\n\033[38;5;220m[Voltando...]\033[0m\n");
-              }
-          }
-            else {
-              printf("\n\033[38;5;196m[Rubis insuficientes!]\033[0m\n");
-            }
-        }
-          else {
-            printf("\n\033[38;5;196m[Limite de aventureiros atingido!]\033[0m\n");
-          }
-      }
-        else if (opcao == 2) { // [ALTERAR AVENTUREIRO]
-          if (FRPG->rubi >= 5) {
-            if (*ct_a > 0) {
-              aux = escolh_avent(*FRPG, *ct_a);
-              if (aux + 1 == 0) {
-                printf("\n\033[38;5;220m[Voltando...]\033[0m\n");    
-              }
-                else if (sim_nao()) {
-                  alter_avent(FRPG, &FRPG->avt[aux], *ct_a);
-                }
-                  else {
-                    printf("\n\033[38;5;220m[Voltando...]\033[0m\n");
-                  }
-            }
-              else {
-                printf("\n\033[38;5;196m[Não há aventureiros registrados!]\033[0m\n");
-              }
-          }
-            else {
-              printf("\n\033[38;5;196m[Rubis insuficientes!]\033[0m\n");
-            }
-        }
-          else if (opcao == 3) { // [MOSTRAR AVENTUREIROS]
-            if (*ct_a > 0) {
-              limpa_tela();
-              list_avent(FRPG, *ct_a);
-            }
-              else {
-                printf("\n\033[38;5;196m[Nenhum aventureiro encontrado!]\033[0m\n");
-              }
-          }
-            else if (opcao == 4) { // [EXCLUIR AVENTUREIRO]
-              if (*ct_a > 0) {
-                excl_avent(FRPG, ct_a, *ct_v);
-              }
-                else {
-                  printf("\n\033[38;5;196m[Nenhum aventureiro encontrado!]\033[0m\n");
-                }
-            }
-              else if (opcao == 5) { // [EQUIPAR AVENTUREIRO]
-                if (*ct_a > 0) {
-                  if (*ct_e > 0) {
-                    equip_avent(FRPG, *ct_a, ct_e);
-                  }
-                    else {
-                      printf("\n\033[38;5;196m[Nenhum equipamento encontrado!]\033[0m\n");
-                    }
-                }
-                  else {
-                    printf("\n\033[38;5;196m[Nenhum aventureiro encontrado!]\033[0m\n");
-                  }
-              }
-                else if (opcao == 6) { // [DESEQUIPAR AVENTUREIRO]
-                  if (*ct_a > 0) {
-                    desequip_avent(FRPG, *ct_a, ct_e);
-                  }
-                    else {
-                      printf("\n\033[38;5;196m[Nenhum aventureiro encontrado!]\033[0m\n");
-                    }
-                }
   }
 }
 
@@ -3036,75 +2547,38 @@ void menu_eqp(rpg *FRPG, int *ct_a, int *ct_e, int *ct_i, int *ct_v, int *ct_l) 
       if (sim_nao()) {
         loop_ext = 0;
         printf("\n\033[38;5;220m[Voltando...]\033[0m\n"); 
-      }
-        else {
-          printf("\n\033[38;5;196m[Cancelado!]\033[0m\n");
-        }
-    }
-      else if (opcao == 1) { // [FORJAR EQUIPAMENTO]
-        if (*ct_e < 100) {
-          if (FRPG->ouro >= 100) {
-            if (sim_nao()) {
-              FRPG->eqp = (equip *) realloc(FRPG->eqp, (*ct_e + 1) * sizeof(equip));
-              if (FRPG->eqp) {
-                forj_epq(FRPG, &FRPG->eqp[*ct_e], ct_e);
-              }
-                else {
-                  printf("\n\033[38;5;196m[Erro ao realocar memória!]\033[0m\n");
-                  exit(1);
-                }  
-            }
-              else {
-                printf("\n\033[38;5;220m[Voltando...]\033[0m\n");
-              }
-          }
+      } else printf("\n\033[38;5;196m[Cancelado!]\033[0m\n");
+    } else if (opcao == 1) { // [FORJAR EQUIPAMENTO]
+      if (*ct_e < 100) {
+        if (FRPG->ouro >= 100) {
+          if (sim_nao()) {
+            FRPG->eqp = (equip *) realloc(FRPG->eqp, (*ct_e + 1) * sizeof(equip));
+            if (FRPG->eqp) forj_epq(FRPG, &FRPG->eqp[*ct_e], ct_e);
             else {
-              printf("\n\033[38;5;196m[Ouro insuficiente!]\033[0m\n");
-            }
-        }
-          else {
-            printf("\n\033[38;5;196m[Limite de equipamentos atingido!]\033[0m\n");
-          }
-      }
-        else if (opcao == 2) { // [ALTERAR EQUIPAMENTO]
-          if (FRPG->ouro >= 50) {
-            if (*ct_e > 0) {
-              aux = escolh_eqp(*FRPG, *ct_e);
-              if (aux + 1 == 0) {
-                printf("\n\033[38;5;220m[Voltando...]\033[0m\n");
-              }
-                else if (sim_nao()) {
-                  alter_eqp(FRPG, &FRPG->eqp[aux], *ct_e);
-                }
-                  else {
-                    printf("\n\033[38;5;220m[Voltando...]\033[0m\n");
-                  }
-            }
-              else {
-                printf("\n\033[38;5;196m[Não há equipamentos registrados!]\033[0m\n");
-              }
-          }
-            else {
-              printf("\n\033[38;5;196m[Ouro insuficiente!]\033[0m\n");
-            }
-        }
-          else if (opcao == 3) { // [EXIBIR EQUIPAMENTOS]
-            if (*ct_e > 0) {
-              limpa_tela();
-              list_eqp(*FRPG, *ct_e);
-            }
-              else {
-                printf("\n\033[38;5;196m[Nenhum equipamento encontrado!]\033[0m\n");
-              }
-          }
-            else if (opcao == 4) { // [VENDER EQUIPAMENTO]
-              if (*ct_e > 0) {
-                vend_eqp(FRPG, ct_e);
-              }
-                else {
-                  printf("\n\033[38;5;196m[Nenhum equipamento encontrado!]\033[0m\n");
-                }
-            } 
+              printf("\n\033[38;5;196m[Erro ao realocar memória!]\033[0m\n");
+              exit(1);
+            }  
+          } else printf("\n\033[38;5;220m[Voltando...]\033[0m\n");
+        } else printf("\n\033[38;5;196m[Ouro insuficiente!]\033[0m\n");
+      } else printf("\n\033[38;5;196m[Limite de equipamentos atingido!]\033[0m\n");
+    } else if (opcao == 2) { // [ALTERAR EQUIPAMENTO]
+      if (FRPG->ouro >= 50) {
+        if (*ct_e > 0) {
+          aux = escolh_eqp(*FRPG, *ct_e);
+          if (aux + 1 == 0) printf("\n\033[38;5;220m[Voltando...]\033[0m\n");
+          else if (sim_nao()) alter_eqp(FRPG, &FRPG->eqp[aux], *ct_e);
+          else printf("\n\033[38;5;220m[Voltando...]\033[0m\n");  
+        } else printf("\n\033[38;5;196m[Não há equipamentos registrados!]\033[0m\n");
+      } else printf("\n\033[38;5;196m[Ouro insuficiente!]\033[0m\n");
+    } else if (opcao == 3) { // [EXIBIR EQUIPAMENTOS]
+      if (*ct_e > 0) {
+        limpa_tela();
+        list_eqp(*FRPG, *ct_e);
+      } else printf("\n\033[38;5;196m[Nenhum equipamento encontrado!]\033[0m\n");
+    } else if (opcao == 4) { // [VENDER EQUIPAMENTO]
+      if (*ct_e > 0) vend_eqp(FRPG, ct_e);
+      else printf("\n\033[38;5;196m[Nenhum equipamento encontrado!]\033[0m\n");
+    } 
   }
 }
 
@@ -3116,150 +2590,77 @@ void menu_loja(rpg *FRPG, int *ct_a, int *ct_e, int *ct_i, int *ct_v, int *ct_l)
       if (sim_nao()) {
         loop_ext = 0;
         printf("\n\033[38;5;220m[Voltando...]\033[0m\n"); 
-      }
-        else {
-          printf("\n\033[38;5;196m[Cancelado!]\033[0m\n");
-        }
-    }
-      else if (opcao == 1) { // [CADASTRAR ITEM NA LOJA]
-        if (*ct_l < 100) {
-          if (sim_nao()) {
-            FRPG->loja_itm = (item *) realloc(FRPG->loja_itm, (*ct_l + 1) * sizeof(item));
-            if (FRPG->loja_itm) {
-              cadast_item(FRPG, &FRPG->loja_itm[*ct_l], ct_l);
-            }
-              else {
-                printf("\n\033[38;5;196m[Erro ao realocar memória!]\033[0m\n");
-                exit(1);
-              }
-          }
-            else {
-              printf("\n\033[38;5;220m[Voltando...]\033[0m\n");
-            }
-        }
+      } else printf("\n\033[38;5;196m[Cancelado!]\033[0m\n");
+    } else if (opcao == 1) { // [CADASTRAR ITEM NA LOJA]
+      if (*ct_l < 100) {
+        if (sim_nao()) {
+          FRPG->loja_itm = (item *) realloc(FRPG->loja_itm, (*ct_l + 1) * sizeof(item));
+          if (FRPG->loja_itm) cadast_item(FRPG, &FRPG->loja_itm[*ct_l], ct_l);
           else {
-            printf("\n\033[38;5;196m[Limite de vendas atingido!]\033[0m\n");
+            printf("\n\033[38;5;196m[Erro ao realocar memória!]\033[0m\n");
+            exit(1);
           }
-      }
-        else if (opcao == 2) { // [ALTERAR ITEM DA LOJA]
-          if (*ct_l > 0) {
-            aux = escolh_item_loja(*FRPG, *ct_l);
-            if (aux + 1 == 0) {
-              printf("\n\033[38;5;220m[Voltando...]\033[0m\n");
-            }
-              else if (sim_nao()) {
-                alter_item_loja(FRPG, &FRPG->loja_itm[aux], *ct_l);     
-              }
-                else {
-                  printf("\n\033[38;5;220m[Voltando...]\033[0m\n");
-                }
-          }
-            else {
-              printf("\n\033[38;5;196m[Não há itens registrados!]\033[0m\n");
-            }
-        }
-          else if (opcao == 3) { // [ACESSAR ITENS DA LOJA]
-            if (*ct_l > 0) {
-              limpa_tela();
-              list_item_loja(*FRPG, *ct_l);
-            }
-              else {
-                printf("\n\033[38;5;196m[Nenhum item encontrado!]\033[0m\n");
-              }
-          }
-            else if (opcao == 4) { // [EXCLUIR ITEM DA LOJA]
-              if (*ct_l > 0) {
-                aux = escolh_item_loja(*FRPG, *ct_l);
-                if (aux + 1 == 0) {
-                  printf("\n\033[38;5;220m[Voltando...]\033[0m\n");
-                }
-                  else if (ver_item_vend(*FRPG, FRPG->loja_itm[aux].ID, *ct_v)) {
-                    if (sim_nao()) {
-                      excl_item_loja(FRPG, aux, ct_l);
-                      printf("\n\033[38;5;220m[Item excluído com sucesso!]\033[0m\n");
-                    }
-                      else {
-                        printf("\n\033[38;5;220m[Voltando...]\033[0m\n");
-                      }
-                }
-                  else {
-                    printf("\n\033[38;5;196m[Impossível excluir item!]\033[0m");
-                    printf("\n\033[38;5;196m[O item está cadastrado em uma venda!]\033[0m\n");
-                  }     
-              }
-                else {
-                  printf("\n\033[38;5;196m[Nenhum item encontrado!]\033[0m\n");
-                }
-            }
-              else if (opcao == 5) { // [VENDER ITEM]
-                if (*ct_v < 100) {
-                  FRPG->vend = (hist_vend *) realloc(FRPG->vend, (*ct_v + 1) * sizeof(hist_vend));
-                  loja_item(FRPG, &FRPG->vend[*ct_v], ct_i, ct_a, ct_v, ct_l);   
-                }
-                  else {
-                    printf("\n\033[38;5;196m[Limite de vendas atingido!]\033[0m\n");
-                  }
-              }
-                else if (opcao == 6) { // [ALTERAR VENDA]
-                  if (*ct_v > 0) {
-                    aux = escolh_venda(*FRPG, *ct_v);
-                    if (aux + 1 == 0) {
-                      printf("\n\033[38;5;220m[Voltando...]\033[0m\n");
-                    }
-                      else if (sim_nao()) {
-                        alter_venda(FRPG, &FRPG->vend[aux], *ct_v);
-                      }
-                        else {
-                          printf("\n\033[38;5;220m[Voltando...]\033[0m\n");
-                        }
-                  }
-                    else {
-                      printf("\n\033[38;5;196m[Nenhuma venda encontrada!]\033[0m\n");
-                    }
-                }
-                  else if (opcao == 7) { // [VER HISTÓRICO DE VENDAS DE ITENS]
-                    if (*ct_v > 0) {
-                      limpa_tela();
-                      list_vend(*FRPG, *ct_v);
-                    }
-                      else {
-                        printf("\n\033[38;5;196m[Nenhuma venda encontrada!]\033[0m\n");
-                      }
-                  }
-                    else if (opcao == 8) { // [EXCUIR VENDA]
-                      if (*ct_v > 0) {
-                        aux = escolh_venda(*FRPG, *ct_v);
-                        if (aux + 1 == 0) {
-                          printf("\n\033[38;5;220m[Voltando...]\033[0m\n");
-                        }
-                          else if (sim_nao()) {
-                            excl_venda(FRPG, aux, ct_v);
-                            printf("\n\033[38;5;220m[Venda excluída com sucesso!]\033[0m\n");
-                          }
-                            else {
-                              printf("\n\033[38;5;220m[Exclusão cancelada!]\033[0m\n");
-                            }             
-                      }
-                        else {
-                          printf("\n\033[38;5;196m[Nenhuma venda encontrada!]\033[0m\n");
-                        }
-                    }
-                      else if (opcao == 9) { // [VERIFICAR VENDAS DE ITENS ACIMA DE UM VALOR]
-                        if (*ct_v > 0) {
-                          ver_venda(*FRPG, *ct_v);
-                        }
-                          else {
-                            printf("\n\033[38;5;196m[Nenhuma venda encontrada!]\033[0m\n");
-                          }  
-                      }
-                        else if (opcao == 10) { // [VERIFICAR ESTOQUE DE ITENS]
-                          if (*ct_l > 0) {
-                            ver_estoq(*FRPG, *ct_l);
-                          }
-                            else {
-                              printf("\n\033[38;5;196m[Nenhum aventureiro encontrado!]\033[0m\n");
-                            }
-                        }
+        } else printf("\n\033[38;5;220m[Voltando...]\033[0m\n");
+      } else printf("\n\033[38;5;196m[Limite de vendas atingido!]\033[0m\n");
+    } else if (opcao == 2) { // [ALTERAR ITEM DA LOJA]
+      if (*ct_l > 0) {
+        aux = escolh_item_loja(*FRPG, *ct_l);
+        if (aux + 1 == 0) printf("\n\033[38;5;220m[Voltando...]\033[0m\n");
+        else if (sim_nao()) alter_item_loja(FRPG, &FRPG->loja_itm[aux], *ct_l);     
+        else printf("\n\033[38;5;220m[Voltando...]\033[0m\n");
+      } else printf("\n\033[38;5;196m[Não há itens registrados!]\033[0m\n");
+    } else if (opcao == 3) { // [ACESSAR ITENS DA LOJA]
+      if (*ct_l > 0) {
+        limpa_tela();
+        list_item_loja(*FRPG, *ct_l);
+      } else printf("\n\033[38;5;196m[Nenhum item encontrado!]\033[0m\n");
+    } else if (opcao == 4) { // [EXCLUIR ITEM DA LOJA]
+      if (*ct_l > 0) {
+        aux = escolh_item_loja(*FRPG, *ct_l);
+        if (aux + 1 == 0) printf("\n\033[38;5;220m[Voltando...]\033[0m\n");
+        else if (ver_item_vend(*FRPG, FRPG->loja_itm[aux].ID, *ct_v)) {
+          if (sim_nao()) {
+            excl_item_loja(FRPG, aux, ct_l);
+            printf("\n\033[38;5;220m[Item excluído com sucesso!]\033[0m\n");
+          } else printf("\n\033[38;5;220m[Voltando...]\033[0m\n");
+        } else {
+          printf("\n\033[38;5;196m[Impossível excluir item!]\033[0m");
+          printf("\n\033[38;5;196m[O item está cadastrado em uma venda!]\033[0m\n");
+        }     
+      } else printf("\n\033[38;5;196m[Nenhum item encontrado!]\033[0m\n");
+    } else if (opcao == 5) { // [VENDER ITEM]
+      if (*ct_v < 100) {
+        FRPG->vend = (hist_vend *) realloc(FRPG->vend, (*ct_v + 1) * sizeof(hist_vend));
+        loja_item(FRPG, &FRPG->vend[*ct_v], ct_i, ct_a, ct_v, ct_l);   
+      } else printf("\n\033[38;5;196m[Limite de vendas atingido!]\033[0m\n");
+    } else if (opcao == 6) { // [ALTERAR VENDA]
+      if (*ct_v > 0) {
+        aux = escolh_venda(*FRPG, *ct_v);
+        if (aux + 1 == 0) printf("\n\033[38;5;220m[Voltando...]\033[0m\n");
+        else if (sim_nao()) alter_venda(FRPG, &FRPG->vend[aux], *ct_v);
+        else printf("\n\033[38;5;220m[Voltando...]\033[0m\n");
+      } else printf("\n\033[38;5;196m[Nenhuma venda encontrada!]\033[0m\n");
+    } else if (opcao == 7) { // [VER HISTÓRICO DE VENDAS DE ITENS]
+      if (*ct_v > 0) {
+        limpa_tela();
+        list_vend(*FRPG, *ct_v);
+      } else printf("\n\033[38;5;196m[Nenhuma venda encontrada!]\033[0m\n");
+    } else if (opcao == 8) { // [EXCUIR VENDA]
+      if (*ct_v > 0) {
+        aux = escolh_venda(*FRPG, *ct_v);
+        if (aux + 1 == 0) printf("\n\033[38;5;220m[Voltando...]\033[0m\n");
+        else if (sim_nao()) {
+          excl_venda(FRPG, aux, ct_v);
+          printf("\n\033[38;5;220m[Venda excluída com sucesso!]\033[0m\n");
+        } else printf("\n\033[38;5;220m[Exclusão cancelada!]\033[0m\n");             
+      } else printf("\n\033[38;5;196m[Nenhuma venda encontrada!]\033[0m\n");
+    } else if (opcao == 9) { // [VERIFICAR VENDAS DE ITENS ACIMA DE UM VALOR]
+      if (*ct_v > 0) ver_venda(*FRPG, *ct_v);
+      else printf("\n\033[38;5;196m[Nenhuma venda encontrada!]\033[0m\n");  
+    } else if (opcao == 10) { // [VERIFICAR ESTOQUE DE ITENS]
+      if (*ct_l > 0) ver_estoq(*FRPG, *ct_l);
+      else printf("\n\033[38;5;196m[Nenhum aventureiro encontrado!]\033[0m\n");
+    }
   }
 }
 
@@ -3271,41 +2672,21 @@ void menu_itens(rpg *FRPG, int *ct_a, int *ct_e, int *ct_i, int *ct_v, int *ct_l
       if (sim_nao()) {
         loop_ext = 0;
         printf("\n\033[38;5;220m[Voltando...]\033[0m\n"); 
-      }
-        else {
-          printf("\n\033[38;5;196m[Cancelado!]\033[0m\n");
-        }
+      } else printf("\n\033[38;5;196m[Cancelado!]\033[0m\n");
+    } else if (opcao == 1) { // [VER ITENS]
+      if (*ct_i > 0) {
+        limpa_tela();
+        list_item(*FRPG, *ct_i);
+      } else printf("\n\033[38;5;196m[Nenhum item encontrado!]\033[0m\n");
+    } else if (opcao == 2) { // [USAR ITEM]
+      if ((*ct_a > 0 || *ct_e > 0) && *ct_i > 0) use_item(FRPG, *ct_a, *ct_e, ct_i);
+      else printf("\n\033[38;5;196m[Nenhum avent. e equip. ou item encontrados!]\033[0m\n");     
+    } else if (opcao == 3) { // [REVENDER ITENS]
+      if (*ct_i > 0) {
+        if (sim_nao()) revend_item(FRPG, ct_i, *ct_v);
+        else printf("\n\033[38;5;220m[Voltando...]\033[0m\n");
+      } else printf("\n\033[38;5;196m[Nenhum item encontrado!]\033[0m\n");                  
     }
-      else if (opcao == 1) { // [VER ITENS]
-        if (*ct_i > 0) {
-          limpa_tela();
-          list_item(*FRPG, *ct_i);
-        }
-          else {
-            printf("\n\033[38;5;196m[Nenhum item encontrado!]\033[0m\n");
-          }
-      }
-        else if (opcao == 2) { // [USAR ITEM]
-          if ((*ct_a > 0 || *ct_e > 0) && *ct_i > 0) {
-            use_item(FRPG, *ct_a, *ct_e, ct_i);
-          }
-            else {
-              printf("\n\033[38;5;196m[Nenhum avent. e equip. ou item encontrados!]\033[0m\n");
-            }       
-        }
-            else if (opcao == 3) { // [REVENDER ITENS]
-              if (*ct_i > 0) {
-                if (sim_nao()) {
-                  revend_item(FRPG, ct_i, *ct_v);
-                }
-                  else {
-                    printf("\n\033[38;5;220m[Voltando...]\033[0m\n");
-                  }
-              }
-                else {
-                  printf("\n\033[38;5;196m[Nenhum item encontrado!]\033[0m\n");                  
-                }
-            }
   }
 }
 
@@ -3329,116 +2710,56 @@ void menu_arquivo(rpg *FRPG, int *ct_a, int *ct_e, int *ct_i, int *ct_v, int *ct
       scanf("%d", &opcao);
       limpa_buffer();
       barra("", "\n");
-      if (opcao < 0 || opcao > 2) {
-        printf("\n\033[38;5;196m[Opção inválida! Tente novamente...]\033[0m\n");
-      }
+      if (opcao < 0 || opcao > 2) printf("\n\033[38;5;196m[Opção inválida! Tente novamente...]\033[0m\n");
     } while (opcao < 0 || opcao > 2);
-
     if (opcao == 0) { // [VOLTAR]
       if (sim_nao()) {
         loop_ext = 0;
         printf("\n\033[38;5;220m[Voltando...]\033[0m\n"); 
-      }
-        else {
-          printf("\n\033[38;5;196m[Cancelado!]\033[0m\n");
-        }
+      } else printf("\n\033[38;5;196m[Cancelado!]\033[0m\n");
     }
       else if (opcao == 1) { // [SALVAR JOGO]
         esc = escolh_salvar();
-        if (esc == 0) {
-          printf("\n\033[38;5;220m[Voltando...]\033[0m\n");
-        }
+        if (esc == 0) printf("\n\033[38;5;220m[Voltando...]\033[0m\n");
           else if (esc == 1) { // [SALVAR AVENTUREIROS]
             if (*ct_a > 0) {
-              if (sim_nao()) {
-                salvar_avent("Aventureiros.bin", FRPG->avt, *ct_a);
-              }
-                else {
-                  printf("\n\033[38;5;196m[Salvamento cancelado!]\033[0m\n");
-                }
-            }
-              else {
-                printf("\n\033[38;5;196m[Não há aventureiros para salvar!]\033[0m\n");
-              }
+              if (sim_nao()) salvar_avent("Aventureiros.bin", FRPG->avt, *ct_a);
+              else printf("\n\033[38;5;196m[Salvamento cancelado!]\033[0m\n");
+            } else printf("\n\033[38;5;196m[Não há aventureiros para salvar!]\033[0m\n");
+          } else if (esc == 2) { // [SALVAR EQUIPAMENTOS]
+            if (*ct_e > 0) {
+              if (sim_nao()) salvar_equip("Equipamentos.bin", FRPG->eqp, *ct_e);
+              else printf("\n\033[38;5;196m[Salvamento cancelado!]\033[0m\n");
+            } else printf("\n\033[38;5;196m[Não há equipamentos para salvar!]\033[0m\n");            
+          } else if (esc == 3) { // [SALVAR ITENS]
+            if (*ct_i > 0) {
+              if (sim_nao())  salvar_itens("Itens.bin", FRPG->loja_itm, *ct_l);
+              else printf("\n\033[38;5;196m[Salvamento cancelado!]\033[0m\n");
           }
-            else if (esc == 2) { // [SALVAR EQUIPAMENTOS]
-              if (*ct_e > 0) {
-                if (sim_nao()) {
-                  salvar_equip("Equipamentos.bin", FRPG->eqp, *ct_e);
-                }
-                  else {
-                    printf("\n\033[38;5;196m[Salvamento cancelado!]\033[0m\n");
-                  }
-              }
-                else {
-                  printf("\n\033[38;5;196m[Não há equipamentos para salvar!]\033[0m\n");
-                }               
-            }
-              else if (esc == 3) { // [SALVAR ITENS]
-                if (*ct_i > 0) {
-                  if (sim_nao()) {
-                    salvar_itens("Itens.bin", FRPG->loja_itm, *ct_l);
-                  }
-                    else {
-                      printf("\n\033[38;5;196m[Salvamento cancelado!]\033[0m\n");
-                    }
-              }
-                else {
-                  printf("\n\033[38;5;196m[Não há itens para salvar!]\033[0m\n");
-                }
-              }
-                else if (esc == 4) { // [SALVAR VENDAS]
-                  if (*ct_v > 0) {
-                    if (sim_nao()) {
-                      salvar_vendas("Vendas.bin", FRPG->vend, *ct_v);
-                    }
-                      else {
-                        printf("\n\033[38;5;196m[Salvamento cancelado!]\033[0m\n");
-                      }
-                  }
-                    else {
-                      printf("\n\033[38;5;196m[Não há vendas para salvar!]\033[0m\n");   
-                    }
-                }
-      }
-        else if (opcao == 2) { // [CARREGAR JOGO]
-          esc = escolh_carregar();
-          if (esc == 0) { // [VOLTAR]
-            printf("\n\033[38;5;220m[Voltando...]\033[0m\n");
+            else printf("\n\033[38;5;196m[Não há itens para salvar!]\033[0m\n");
+          } else if (esc == 4) { // [SALVAR VENDAS]
+            if (*ct_v > 0) {
+              if (sim_nao()) salvar_vendas("Vendas.bin", FRPG->vend, *ct_v);
+              else printf("\n\033[38;5;196m[Salvamento cancelado!]\033[0m\n");
+            } else printf("\n\033[38;5;196m[Não há vendas para salvar!]\033[0m\n");   
           }
-            else if (esc == 1) { // [CARREGAR AVENTUREIROS]
-              if (sim_nao()) {
-                carregar_avent("Aventureiros.bin", FRPG, ct_a);
-              }
-                else {
-                  printf("\n\033[38;5;196m[Carregamento cancelado!]\033[0m\n");
-                }
-            }
-              else if (esc == 2) { // [CARREGAR EQUIPAMENTOS]
-                if (sim_nao()) {
-                  carregar_equip("Equipamentos.bin", FRPG, ct_e);
-                }
-                  else {
-                    printf("\n\033[38;5;196m[Salvamento cancelado!]\033[0m\n");
-                  }
-              }
-                else if (esc == 3) {  // [CARREGAR ITENS]
-                  if (sim_nao()) {
-                    carregar_itens("Itens.bin", FRPG, ct_l);    
-                  }
-                    else {
-                      printf("\n\033[38;5;196m[Carregamento cancelado!]\033[0m\n");
-                    }
-                }
-                  else if (esc == 4) { // [CARREGAR VENDAS]
-                    if (sim_nao()) {
-                      carregar_vendas("Vendas.bin", FRPG, ct_v);             
-                    }
-                      else {
-                        printf("\n\033[38;5;196m[Carregamento cancelado!]\033[0m\n");
-                      }
-                  }
+      } else if (opcao == 2) { // [CARREGAR JOGO]
+        esc = escolh_carregar();
+        if (esc == 0) printf("\n\033[38;5;220m[Voltando...]\033[0m\n");
+        else if (esc == 1) { // [CARREGAR AVENTUREIROS]
+          if (sim_nao()) carregar_avent("Aventureiros.bin", FRPG, ct_a);
+          else printf("\n\033[38;5;196m[Carregamento cancelado!]\033[0m\n");
+        } else if (esc == 2) { // [CARREGAR EQUIPAMENTOS]
+          if (sim_nao()) carregar_equip("Equipamentos.bin", FRPG, ct_e);
+          else printf("\n\033[38;5;196m[Salvamento cancelado!]\033[0m\n");
+        } else if (esc == 3) {  // [CARREGAR ITENS]
+          if (sim_nao()) carregar_itens("Itens.bin", FRPG, ct_l);    
+          else printf("\n\033[38;5;196m[Carregamento cancelado!]\033[0m\n");
+        } else if (esc == 4) { // [CARREGAR VENDAS]
+          if (sim_nao()) carregar_vendas("Vendas.bin", FRPG, ct_v);             
+          else printf("\n\033[38;5;196m[Carregamento cancelado!]\033[0m\n");
         }
+      }
   }
 }
 
@@ -3459,10 +2780,10 @@ int main(void) { // [FUNÇÃO PRINCIPAL]
   GwG->habil_mods = (char **) calloc(1, sizeof(char *));
   GwG->habil_tipos = (char **) calloc(1, sizeof(char *));
   GwG->habil_nomes = (char **) calloc(1, sizeof(char *));
-  if (!GwG || !GwG->avt || !GwG->inmg || !GwG->eqp || !GwG->itm 
-   || !GwG->vend || !GwG->tipos || !GwG->classes || !GwG->itens_aux 
-   || !GwG->habil_mods || !GwG->itens_nome || !GwG->habil_tipos 
-   || !GwG->habil_nomes || !GwG->loja_itm) {
+  if (!GwG || !GwG->avt || !GwG->inmg || !GwG->eqp || !GwG->itm || 
+      !GwG->vend || !GwG->tipos || !GwG->classes || !GwG->itens_aux || 
+      !GwG->habil_mods || !GwG->itens_nome || !GwG->habil_tipos || 
+      !GwG->habil_nomes || !GwG->loja_itm) {
     printf("\n\033[38;5;196m[Erro ao alocar memória!]\033[0m\n");
     exit(1);
   } 
@@ -3480,34 +2801,15 @@ int main(void) { // [FUNÇÃO PRINCIPAL]
         barra("\n", "\n");
         limpa_tela();
         loop = 0;
-      }
-        else {
-          printf("\n\033[38;5;220m[Voltando...]\033[0m\n");
-        }
-    }
-      else if (esc == 1) { // [MENU AVENTUREIROS]
-        menu_avent(GwG, &ct_avent, &ct_eqp, &ct_item, &ct_vend, &ct_loja);
-      }
-        else if (esc == 2) { // [MENU EQUIPAMENTOS]
-          menu_eqp(GwG, &ct_avent, &ct_eqp, &ct_item, &ct_vend, &ct_loja);
-        }
-          else if (esc == 3) { // [MENU LOJA ITENS]
-            menu_loja(GwG, &ct_avent, &ct_eqp, &ct_item, &ct_vend, &ct_loja);
-          }     
-            else if (esc == 4) { // [MENU INVENTÁRIO ITENS]
-              menu_itens(GwG, &ct_avent, &ct_eqp, &ct_item, &ct_vend, &ct_loja);
-            }
-              else if (esc == 5) { // [MODO AVENTURA]
-                if (ct_avent > 0) {
-                  aventura(GwG, ct_avent, &ct_eqp, &ct_item);
-                }
-                  else {
-                    printf("\n\033[38;5;196m[Nenhum aventureiro encontrado!]\033[0m\n");
-                  }
-              }
-                else if (esc == 6) { // [MENU ARQUIVOS]
-                  menu_arquivo(GwG, &ct_avent, &ct_eqp, &ct_item, &ct_vend, &ct_loja);            
-                }
+      } else printf("\n\033[38;5;220m[Voltando...]\033[0m\n");
+    } else if (esc == 1) menu_avent(GwG, &ct_avent, &ct_eqp, &ct_item, &ct_vend, &ct_loja); // [MENU DE AVENTUREIROS]
+      else if (esc == 2) menu_eqp(GwG, &ct_avent, &ct_eqp, &ct_item, &ct_vend, &ct_loja); // [MENU DE EQUIPAMENTOS]
+      else if (esc == 3) menu_loja(GwG, &ct_avent, &ct_eqp, &ct_item, &ct_vend, &ct_loja); // [MENU DE LOJA]
+      else if (esc == 4) menu_itens(GwG, &ct_avent, &ct_eqp, &ct_item, &ct_vend, &ct_loja); // [MENU DE ITENS]
+      else if (esc == 5) { // [MODO AVENTURA]
+        if (ct_avent > 0) aventura(GwG, ct_avent, &ct_eqp, &ct_item);
+        else printf("\n\033[38;5;196m[Nenhum aventureiro encontrado!]\033[0m\n");
+      } else if (esc == 6) menu_arquivo(GwG, &ct_avent, &ct_eqp, &ct_item, &ct_vend, &ct_loja); // [MENU DE ARQUIVOS]        
   }
   free(GwG->avt);
   free(GwG->inmg);
